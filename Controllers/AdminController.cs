@@ -269,4 +269,59 @@ namespace QuanLyThuVien.Controllers
             }
         }
 
-        
+        [HttpPost]
+        public async Task<IActionResult> ExportPopularToExcel()
+        {
+            // 1. Lấy dữ liệu
+            var popularBooks = await _context.BookLoans
+                .Where(l => l.Status == "Approved" || l.Status == "Returned")
+                .GroupBy(l => l.BookId)
+                .Select(g => new { BookId = g.Key, LoanCount = g.Count() })
+                .OrderByDescending(b => b.LoanCount)
+                .Take(20) // Lấy top 20 hoặc tùy chọn
+                .Join(_context.Books,
+                      popular => popular.BookId,
+                      book => book.BookId,
+                      (popular, book) => new PopularBookViewModel
+                      {
+                          Title = book.Title,
+                          Author = book.Author,
+                          LoanCount = popular.LoanCount
+                      })
+                .ToListAsync();
+
+            // 2. Tạo file Excel
+            using (var workbook = new XLWorkbook())
+            {
+                var worksheet = workbook.Worksheets.Add("SachPhoBien");
+                var currentRow = 1;
+
+                // Header
+                worksheet.Cell(currentRow, 1).Value = "Tên sách";
+                worksheet.Cell(currentRow, 2).Value = "Tác giả";
+                worksheet.Cell(currentRow, 3).Value = "Số lượt mượn";
+                worksheet.Row(1).Style.Font.Bold = true;
+
+                // Body
+                foreach (var book in popularBooks)
+                {
+                    currentRow++;
+                    worksheet.Cell(currentRow, 1).Value = book.Title;
+                    worksheet.Cell(currentRow, 2).Value = book.Author;
+                    worksheet.Cell(currentRow, 3).Value = book.LoanCount;
+                }
+
+                // 3. Trả về file
+                using (var stream = new MemoryStream())
+                {
+                    workbook.SaveAs(stream);
+                    var content = stream.ToArray();
+                    return File(
+                        content,
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                        "ThongKeSachPhoBien.xlsx");
+                }
+            }
+        }
+    }
+}
