@@ -1,0 +1,69 @@
+﻿@model QuanLyThuVien.Models.CreateStaffViewModel
+
+@{
+    ViewData["Title"] = "Tạo tài khoản nhân viên";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<style>
+    .form-container {
+        max-width: 600px;
+        margin: 2rem auto;
+        padding: 2.5rem;
+        background-color: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e9ecef;
+    }
+
+    .form-title {
+        font-weight: 700;
+        margin-bottom: 2rem;
+        color: #343a40;
+    }
+</style>
+
+<div class="form-container">
+    <div class="text-center">
+        <h2 class="form-title">@ViewData["Title"]</h2>
+    </div>
+
+    <form asp-action="CreateStaff" method="post">
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+        <div class="mb-3">
+            <label asp-for="Username" class="form-label fw-bold"></label>
+            <input asp-for="Username" class="form-control form-control-lg" placeholder="Nhập tên đăng nhập..." />
+            <span asp-validation-for="Username" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Email" class="form-label fw-bold"></label>
+            <input asp-for="Email" class="form-control form-control-lg" placeholder="Nhập email..." />
+            <span asp-validation-for="Email" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Password" class="form-label fw-bold"></label>
+            <input asp-for="Password" type="password" class="form-control form-control-lg" placeholder="Nhập mật khẩu..." />
+            <span asp-validation-for="Password" class="text-danger"></span>
+        </div>
+
+        <div class="mb-4">
+            <label asp-for="ConfirmPassword" class="form-label fw-bold"></label>
+            <input asp-for="ConfirmPassword" type="password" class="form-control form-control-lg" placeholder="Xác nhận lại mật khẩu..." />
+            <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+        </div>
+
+        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+            <a asp-action="ManageStaff" class="btn btn-outline-secondary">Quay lại</a>
+            <button type="submit" class="btn btn-primary px-4">Tạo mới</button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

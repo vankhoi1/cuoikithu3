@@ -1,0 +1,30 @@
+﻿```cshtml
+@model List<QuanLyThuVien.Models.AccountViewModel>
+@{
+    ViewData["Title"] = "Bảng Quản Lý Admin";
+}
+
+<h2>Bảng Quản Lý Admin</h2>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Tên Người Dùng</th>
+            <th>Email</th>
+            <th>Vai trò</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var user in Model)
+        {
+            <tr>
+                <td>@user.Username</td>
+                <td>@user.Email</td>
+                <td>@string.Join(", ", user.Roles)</td>
+            </tr>
+        }
+    </tbody>
+</table>
+<form asp-action="Logout" method="post">
+    <button type="submit" class="btn btn-danger">Đăng Xuất</button>
+</form>
+```
