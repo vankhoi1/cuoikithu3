@@ -1,0 +1,156 @@
+﻿@model QuanLyThuVien.Models.Book
+@using Microsoft.AspNetCore.Http
+@using Microsoft.EntityFrameworkCore
+@inject IHttpContextAccessor HttpContextAccessor
+@{
+    ViewData["Title"] = "Chi Tiết Sách";
+}
+
+<style>
+    .book-details-container {
+        background-color: #fff;
+        padding: 2rem;
+        border-radius: 0.75rem;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+    }
+
+    .book-cover-img {
+        width: 100%;
+        height: auto;
+        border-radius: 8px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+
+    .book-title {
+        font-weight: 700;
+        color: #0056b3;
+    }
+
+    .info-list {
+        list-style: none;
+        padding-left: 0;
+    }
+
+        .info-list li {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            align-items: center;
+        }
+
+            .info-list li strong {
+                color: #495057;
+                min-width: 100px;
+            }
+
+            .info-list li .bi {
+                margin-right: 10px;
+                color: #007bff;
+            }
+
+    .description-block {
+        background-color: #f8f9fa;
+        padding: 1.5rem;
+        border-radius: 8px;
+        margin-top: 1.5rem;
+    }
+</style>
+
+<div class="book-details-container">
+    <div class="row">
+        <div class="col-lg-4 text-center mb-4 mb-lg-0">
+            @{
+                string imagePathToShow = "~/images/no-image.jpg";
+                if (Model.BookImages != null && Model.BookImages.Any())
+                {
+                    var path = !string.IsNullOrWhiteSpace(Model.BookImages.First().ImageUrl)
+                    ? Model.BookImages.First().ImageUrl
+                    : Model.BookImages.First().ImagePath;
+                    if (!string.IsNullOrWhiteSpace(path)) imagePathToShow = path;
+                }
+            }
+            <img src="@Url.Content(imagePathToShow)" class="book-cover-img" alt="Ảnh bìa sách @Model.Title" />
+        </div>
+
+        <div class="col-lg-8">
+            <h1 class="book-title display-5">@Model.Title</h1>
+            <p class="lead text-muted">bởi @Model.Author</p>
+            <hr />
+
+            <ul class="info-list">
+                <li><i class="bi bi-tags-fill"></i><strong>Thể loại:</strong> @Model.Genre</li>
+                <li><i class="bi bi-stack"></i><strong>Số lượng còn:</strong> @Model.SoLuong</li>
+                <li>
+                    <i class="bi bi-check-circle-fill"></i><strong>Trạng thái:</strong>
+                    @if (Model.IsAvailable)
+                    {
+                        <span class="badge bg-success">Có sẵn</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-secondary">Hết sách</span>
+                    }
+                </li>
+            </ul>
+
+            @if (!string.IsNullOrEmpty(Model.Description))
+            {
+                <div class="description-block">
+                    <h5 class="fw-bold">Nội dung</h5>
+                    <p class="mb-0">@Model.Description</p>
+                </div>
+            }
+
+            <div class="mt-4">
+                @if (TempData["SuccessMessage"] != null)
+                {
+                    <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+                }
+                @if (TempData["ErrorMessage"] != null)
+                {
+                    <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+                }
+
+                @{
+                    var username = User.Identity.Name;
+                    var dbContext = HttpContextAccessor.HttpContext.RequestServices.GetService<QuanLyThuVien.Data.LibraryDbContext>();
+                    var existingLoan = await dbContext.BookLoans
+                    .FirstOrDefaultAsync(l => l.BookId == Model.BookId && l.Username == username && (l.Status == "Pending" || (l.Status == "Approved" && l.ReturnDate == null)));
+                    var existingReservation = await dbContext.BookReservations
+                    .FirstOrDefaultAsync(r => r.BookId == Model.BookId && r.Username == username && r.Status == "Pending");
+                }
+
+                @if (existingLoan != null)
+                {
+                    if (existingLoan.Status == "Pending")
+                    {
+                        <div class="alert alert-info"><i class="bi bi-hourglass-split me-2"></i>Bạn đã gửi yêu cầu mượn sách này. Vui lòng chờ thủ thư duyệt.</div>
+                    }
+                    else if (existingLoan.Status == "Approved")
+                    {
+                        <div class="alert alert-success"><i class="bi bi-check-circle-fill me-2"></i>Bạn đang mượn cuốn sách này. <a asp-controller="Account" asp-action="LoanStatus" class="alert-link">Xem tình trạng mượn</a>.</div>
+                    }
+                }
+                else if (existingReservation != null)
+                {
+                    <div class="alert alert-warning"><i class="bi bi-calendar2-check-fill me-2"></i>Bạn đã đặt trước sách này. Vui lòng chờ sách được trả.</div>
+                }
+                else if (Model.IsAvailable)
+                {
+                    <form asp-action="BorrowBook" asp-controller="Account" method="post">
+                        <input type="hidden" name="bookId" value="@Model.BookId" />
+                        <button type="submit" class="btn btn-primary btn-lg w-100"><i class="bi bi-hand-thumbs-up-fill me-2"></i>Gửi Yêu Cầu Mượn</button>
+                    </form>
+                }
+                else
+                {
+                    <form asp-action="ReserveBook" asp-controller="Account" method="post">
+                        <input type="hidden" name="bookId" value="@Model.BookId" />
+                        <button type="submit" class="btn btn-secondary btn-lg w-100"><i class="bi bi-bookmark-plus-fill me-2"></i>Đặt Trước Sách</button>
+                    </form>
+                }
+            </div>
+            <a href="javascript:history.back()" class="btn btn-link mt-3">← Quay về trang trước</a>
+        </div>
+    </div>
+</div>

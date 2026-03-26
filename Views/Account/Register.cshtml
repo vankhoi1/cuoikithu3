@@ -1,0 +1,188 @@
+﻿@model QuanLyThuVien.Models.RegisterViewModel
+@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
+
+@{
+    ViewData["Title"] = "Đăng Ký";
+}
+
+<h2 class="mt-4">@ViewData["Title"]</h2>
+
+<style>
+    body {
+        background: #f0f2f5;
+        font-family: 'Segoe UI', sans-serif;
+    }
+
+    .login-wrapper {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 90vh;
+    }
+
+    .login-box {
+        background: #ffffff;
+        padding: 50px 40px;
+        border-radius: 16px;
+        box-shadow: 0 12px 24px rgba(0,0,0,0.1);
+        width: 100%;
+        max-width: 520px;
+        animation: fadeSlide 0.8s ease-out;
+    }
+
+
+    {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    }
+
+    .login-title {
+        text-align: center;
+        font-size: 28px;
+        font-weight: 600;
+        margin-bottom: 30px;
+        color: #333;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+        position: relative;
+    }
+
+    .form-control {
+        height: 48px;
+        padding-left: 14px;
+        font-size: 16px;
+        border-radius: 10px;
+        border: 1px solid #ccc;
+        transition: 0.3s;
+    }
+
+        .form-control:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.2);
+            outline: none;
+        }
+
+    .btn-primary, .btn-success {
+        height: 48px;
+        border-radius: 10px;
+        font-weight: bold;
+    }
+
+    .text-danger {
+        font-size: 14px;
+    }
+
+    .alert {
+        font-size: 14px;
+    }
+</style>
+
+<div class="login-wrapper">
+    <div class="login-box">
+        <div class="login-title">Đăng Ký Tài Khoản</div>
+        <form id="registerForm" method="post" asp-action="Register">
+            @Html.AntiForgeryToken()
+            <div id="summaryError" class="text-danger text-center mb-3"></div>
+
+            @* Lưu ý: Thay thế <label asp-for="..."> bằng label viết tay không phải là cách làm tốt.
+                Cách đúng là dùng [Display(Name="...")] trong file ViewModel.
+            *@
+            <div class="form-group">
+                <label for="Username">Tên đăng nhập</label>
+                <input asp-for="Username" class="form-control" />
+                <span asp-validation-for="Username" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label for="Password">Mật khẩu</label>
+                <input asp-for="Password" class="form-control" type="password" />
+                <span asp-validation-for="Password" class="text-danger"></span>
+            </div>
+
+           
+
+            <div class="form-group">
+                <label for="Email">Email</label>
+                <input asp-for="Email" class="form-control" />
+                <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label for="HoTen">Họ và Tên</label>
+                <input asp-for="HoTen" class="form-control" />
+                <span asp-validation-for="HoTen" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label for="SoDienThoai">Số điện thoại</label>
+                <input asp-for="SoDienThoai" class="form-control" />
+                <span asp-validation-for="SoDienThoai" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label for="NgaySinh">Ngày sinh</label>
+                <input asp-for="NgaySinh" class="form-control" type="date" />
+                <span asp-validation-for="NgaySinh" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label for="DiaChi">Địa chỉ </label>
+                <input asp-for="DiaChi" class="form-control" />
+                <span asp-validation-for="DiaChi" class="text-danger"></span>
+            </div>
+
+            <div class="form-group" id="otpGroup" style="display:none;">
+                <label for="OTP">Mã OTP</label>
+                <input asp-for="OTP" class="form-control" />
+                <span asp-validation-for="OTP" class="text-danger"></span>
+            </div>
+
+            <div class="form-group d-flex gap-2">
+                <button type="button" id="btnSendOTP" class="btn btn-primary w-50">Gửi OTP</button>
+                <button type="submit" id="btnConfirm" class="btn btn-success w-50" style="display:none;">Xác nhận Đăng Ký</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <!-- typed.js -->
+    <script src="https://cdn.jsdelivr.net/npm/typed.js@2.0.12"></script>
+
+    <!-- jQuery + validation (đảm bảo Layout đã có, nếu chưa có thì include ở đây) -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery-validation@1.19.5/dist/jquery.validate.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery-validation-unobtrusive@3.2.12/jquery.validate.unobtrusive.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $("#btnSendOTP").click(function (e) {
+                e.preventDefault();
+                $("#summaryError").html("");
+                $.ajax({
+                    url: '@Url.Action("SendOTP", "Account")',
+                    method: 'POST',
+                    data: $("#registerForm").serialize(),
+                    success: function (result) {
+                        $("#otpGroup").show();
+                        $("#btnConfirm").show();
+                        $("#btnSendOTP").hide();
+                        $("#summaryError").html(`<div class="alert alert-success">${result}</div>`);
+                    },
+                    error: function (xhr) {
+                        let message = xhr.responseText || "Lỗi không xác định.";
+                        $("#summaryError").html(`<div class="alert alert-danger">Gửi OTP thất bại: ${message}</div>`);
+                    }
+                });
+            });
+        });
+    </script>
+}

@@ -1,0 +1,161 @@
+﻿@model List<QuanLyThuVien.Models.Book>
+
+@{
+    ViewData["Title"] = "Thư Viện Sách Online";
+    // Để layout của bạn có padding-top thích hợp
+    var addTopPadding = true;
+    ViewData["LayoutClass"] = "pt-5 mt-4";
+}
+
+<style>
+    /* CSS cho các item kết quả để có hiệu ứng trượt lên */
+    .book-item-animate {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+        .book-item-animate.show {
+            opacity: 1;
+            transform: translateY(0);
+            transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+        }
+</style>
+
+<div class="container my-5">
+    <h2 class="text-center fw-bold text-primary">Thư Viện Sách Online</h2>
+    <p class="text-center text-muted">Khám phá tri thức, kết nối đam mê đọc sách</p>
+
+    <div class="p-4 bg-primary text-white rounded-3 mb-4" id="search-filter-box">
+        <h5 class="fw-bold"><i class="bi bi-funnel"></i> Bộ lọc tìm kiếm</h5>
+        <div class="row align-items-center">
+            <div class="col-md-5 mt-3 mt-md-0">
+                <label for="search-input" class="form-label">Tìm kiếm</label>
+                <input type="text" id="search-input" class="form-control" placeholder="Nhập tiêu đề hoặc tác giả..." />
+            </div>
+            <div class="col-md-3 mt-3 mt-md-0">
+                <label for="genre-select" class="form-label">Thể loại</label>
+                <select id="genre-select" class="form-select">
+                    <option value="">Tất cả</option>
+                    <option value="Fiction">Fiction</option>
+                    <option value="Non-Fiction">Non-Fiction</option>
+                    <option value="Mystery">Mystery</option>
+                </select>
+            </div>
+            <div class="col-md-2 mt-3 mt-md-0">
+                <label for="status-select" class="form-label">Trạng thái</label>
+                <select id="status-select" class="form-select">
+                    <option value="">Tất cả</option>
+                    <option value="available">Có sẵn</option>
+                    <option value="unavailable">Đang được mượn</option>
+                </select>
+            </div>
+            <div class="col-md-2 d-grid mt-3 mt-md-0">
+                <button id="search-button" type="button" class="btn btn-warning fw-bold">
+                    <i class="bi bi-search"></i> Tìm kiếm
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="search-results-container">
+        <div id="loading-spinner" class="text-center" style="display: none;">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Đang tải...</span>
+            </div>
+            <p class="mt-2 text-muted">Đang tìm kiếm sách, vui lòng đợi...</p>
+        </div>
+
+        <div id="book-cards-container" class="row row-cols-1 row-cols-md-4 g-4">
+        </div>
+
+        <div id="no-results-message" class="text-center mt-5" style="display: none;">
+            <p class="h5 text-muted">Không tìm thấy sách nào phù hợp với yêu cầu của bạn.</p>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const searchButton = document.getElementById('search-button');
+            const searchInput = document.getElementById('search-input');
+            const genreSelect = document.getElementById('genre-select');
+            const statusSelect = document.getElementById('status-select');
+            const resultsContainer = document.getElementById('search-results-container');
+            const bookCardsContainer = document.getElementById('book-cards-container');
+            const loadingSpinner = document.getElementById('loading-spinner');
+            const noResultsMessage = document.getElementById('no-results-message');
+
+            const API_URL = '/api/books';
+
+            searchButton.addEventListener('click', performSearch);
+            searchInput.addEventListener('keydown', function(event) {
+                if (event.key === 'Enter') {
+                    performSearch();
+                }
+            });
+            // Gắn sự kiện change cho dropdown để tự động tìm kiếm
+            genreSelect.addEventListener('change', performSearch);
+            statusSelect.addEventListener('change', performSearch);
+
+            async function performSearch() {
+                const searchTerm = searchInput.value;
+                const selectedGenre = genreSelect.value;
+                const selectedStatus = statusSelect.value;
+
+                // Chuẩn bị cho việc tải mới
+                bookCardsContainer.innerHTML = '';
+                noResultsMessage.style.display = 'none';
+                loadingSpinner.style.display = 'block';
+
+                try {
+                    const response = await fetch(`${API_URL}?searchString=${encodeURIComponent(searchTerm)}&genre=${encodeURIComponent(selectedGenre)}&status=${encodeURIComponent(selectedStatus)}`);
+
+                    if (!response.ok) {
+                        throw new Error('Lỗi khi tải dữ liệu sách.');
+                    }
+
+                    const books = await response.json();
+
+                    loadingSpinner.style.display = 'none';
+
+                    if (books.length === 0) {
+                        noResultsMessage.style.display = 'block';
+                    } else {
+                        // Hiển thị kết quả mới với hiệu ứng trượt và mờ dần
+                        books.forEach((book, index) => {
+                            const bookCard = document.createElement('div');
+                            bookCard.className = 'col book-item-animate';
+                            bookCard.innerHTML = `
+                                <a href="/Account/BookDetails/${book.bookId}" class="card h-100 shadow-sm text-decoration-none">
+                                    <img src="${book.imageUrl}" class="card-img-top" alt="${book.title}" style="height: 250px; object-fit: cover;" />
+                                    <div class="card-body">
+                                        <h5 class="card-title text-dark">${book.title}</h5>
+                                        <p class="card-text text-muted">${book.author}</p>
+                                    </div>
+                                    <div class="card-footer bg-transparent border-0 d-flex justify-content-between align-items-center">
+                                        <span class="badge bg-${book.isAvailable ? "success" : "danger"}">${book.isAvailable ? "Có sẵn" : "Đã hết"}</span>
+                                        <span class="text-muted small">${book.soLuong} bản</span>
+                                    </div>
+                                </a>
+                            `;
+                            bookCardsContainer.appendChild(bookCard);
+
+                            setTimeout(() => {
+                                bookCard.classList.add('show');
+                            }, index * 100);
+                        });
+                    }
+                } catch (error) {
+                    console.error('Lỗi tìm kiếm:', error);
+                    loadingSpinner.style.display = 'none';
+                    noResultsMessage.style.display = 'block';
+                    noResultsMessage.textContent = 'Đã xảy ra lỗi khi tìm kiếm.';
+                }
+            }
+
+            // Tải lần đầu tiên khi trang load
+            performSearch();
+        });
+    </script>
+}

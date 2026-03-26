@@ -1,0 +1,143 @@
+﻿@model IEnumerable<QuanLyThuVien.Models.StaffWithStatsViewModel>
+
+@{
+    ViewData["Title"] = "Quản lý nhân viên";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<style>
+    .card-header-custom {
+        background: linear-gradient(to right, #434343, #212529); /* Gradient Đen-Xám */
+        color: white;
+    }
+
+    .btn-action {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        border: none;
+    }
+
+        .btn-action:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+    .badge-active {
+        background-color: #198754 !important; /* Xanh lá */
+    }
+
+    .badge-inactive {
+        background-color: #6c757d !important; /* Xám */
+    }
+</style>
+
+<div class="container-fluid py-4">
+    <div class="card shadow-sm">
+        <div class="card-header card-header-custom d-flex justify-content-between align-items-center">
+            <h4 class="mb-0">
+                <i class="bi bi-person-video2 me-2"></i> @ViewData["Title"]
+            </h4>
+            <a asp-action="CreateStaff" class="btn btn-light">
+                <i class="bi bi-plus-circle-fill me-1"></i> Tạo tài khoản mới
+            </a>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table id="staffTable" class="table table-hover align-middle" style="width:100%">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Tên đăng nhập</th>
+                            <th>Email</th>
+                            <th class="text-center">Trạng thái</th>
+                            <th class="text-center">Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>
+                                    @* Tên đăng nhập giờ chỉ là văn bản, không còn là link *@
+                                    @item.Username
+                                </td>
+                                <td>@item.Email</td>
+                                <td class="text-center">
+                                    @if (item.IsActive)
+                                    {
+                                        <span class="badge badge-active">Hoạt động</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge badge-inactive">Vô hiệu hóa</span>
+                                    }
+                                </td>
+                                <td class="text-center">
+                                    <div class="btn-group" role="group">
+                                        @* Nút xem lịch sử mới được thêm vào đây *@
+                                        <a asp-action="StaffActivityHistory" asp-route-username="@item.Username" class="btn btn-sm btn-action btn-info" title="Xem lịch sử hoạt động của @item.Username">
+                                            <i class="bi bi-clock-history"></i> Lịch sử
+                                        </a>
+
+                                        <form asp-action="ToggleStaffStatus" asp-route-username="@item.Username" method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            @if (item.IsActive)
+                                            {
+                                                <button type="submit" class="btn btn-sm btn-action btn-warning" title="Vô hiệu hóa">
+                                                    <i class="bi bi-x-circle-fill"></i> Vô hiệu hóa
+                                                </button>
+                                            }
+                                            else
+                                            {
+                                                <button type="submit" class="btn btn-sm btn-action btn-success" title="Kích hoạt">
+                                                    <i class="bi bi-check-circle-fill"></i> Kích hoạt
+                                                </button>
+                                            }
+                                        </form>
+
+                                        <form asp-action="DeleteStaff" asp-route-username="@item.Username" method="post" onsubmit="return confirm('Bạn có chắc chắn muốn xóa tài khoản này?');" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-sm btn-action btn-danger" title="Xóa">
+                                                <i class="bi bi-trash3-fill"></i> Xóa
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card-footer bg-light">
+            <a asp-action="Index" class="btn btn-secondary">
+                <i class="bi bi-arrow-left-circle-fill me-1"></i> Về Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $('#staffTable').DataTable({
+                language: {
+                    sProcessing: "Đang xử lý...",
+                    sLengthMenu: "Xem _MENU_ nhân viên",
+                    sZeroRecords: "Không tìm thấy nhân viên nào phù hợp",
+                    sInfo: "Đang xem _START_ đến _END_ trong tổng số _TOTAL_ nhân viên",
+                    sInfoEmpty: "Đang xem 0 đến 0 trong tổng số 0 nhân viên",
+                    sInfoFiltered: "(được lọc từ _MAX_ nhân viên)",
+                    sSearch: "Tìm kiếm:",
+                    oPaginate: {
+                        sFirst: "Đầu",
+                        sPrevious: "Trước",
+                        sNext: "Tiếp",
+                        sLast: "Cuối"
+                    }
+                },
+                "columnDefs": [
+                    { "orderable": false, "targets": 3 } // Tắt sắp xếp cho cột Hành động
+                ]
+            });
+        });
+    </script>
+}

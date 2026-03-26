@@ -1,0 +1,156 @@
+﻿@model List<QuanLyThuVien.Models.Notification>
+
+@{
+    ViewData["Title"] = "Trung tâm Thông báo";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .card-header-custom {
+        background: linear-gradient(to right, #007bff, #0056b3);
+        color: white;
+    }
+
+    .badge-unread {
+        background-color: #0d6efd !important;
+        color: white;
+    }
+
+    .badge-read {
+        background-color: #6c757d !important;
+        color: white;
+    }
+
+    .notification-icon {
+        font-size: 1.2rem;
+        width: 30px;
+    }
+
+    /* Thêm style để cho người dùng biết dòng này có thể nhấn vào */
+    .notification-item:hover {
+        background-color: #f0f8ff; /* Màu xanh nhạt khi hover */
+    }
+</style>
+
+<div class="card shadow-sm">
+    <div class="card-header card-header-custom d-flex justify-content-between align-items-center">
+        <h4 class="mb-0"><i class="bi bi-bell-fill me-2"></i> @ViewData["Title"]</h4>
+        <form asp-controller="Account" asp-action="MarkAllAsRead" method="post" class="mb-0">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="btn btn-light btn-sm">
+                <i class="bi bi-check-all"></i> Đánh dấu tất cả là đã đọc
+            </button>
+        </form>
+    </div>
+    <div class="card-body p-0">
+        @if (Model != null && Model.Any())
+        {
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <tbody>
+                        @foreach (var notification in Model)
+                        {
+                            var message = notification.Message.ToLower();
+                            string iconClass = "bi-info-circle-fill text-secondary";
+
+                            if (message.Contains("đã được duyệt") || message.Contains("thành công") || message.Contains("đã có sẵn"))
+                            {
+                                iconClass = "bi-check-circle-fill text-success";
+                            }
+                            else if (message.Contains("đã bị từ chối") || message.Contains("quá hạn"))
+                            {
+                                iconClass = "bi-x-circle-fill text-danger";
+                            }
+                            else if (message.Contains("hạn trả"))
+                            {
+                                iconClass = "bi-calendar-check-fill text-primary";
+                            }
+
+                            <tr class="notification-item @(notification.IsRead ? "opacity-75" : "fw-bold")"
+                                data-notification-id="@notification.NotificationId"
+                                style="cursor: pointer;">
+                                <td class="ps-3">
+                                    <i class="bi @iconClass notification-icon"></i>
+                                </td>
+                                <td style="width: 60%;">
+                                    @notification.Message
+                                </td>
+                                <td class="text-muted">
+                                    @notification.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+                                </td>
+                                <td class="text-center pe-3">
+                                    @if (notification.IsRead)
+                                    {
+                                        <span class="badge badge-read">Đã đọc</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge badge-unread">Mới</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="p-4 text-center">
+                <p class="text-muted fst-italic mb-0">Bạn không có thông báo nào.</p>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const notificationItems = document.querySelectorAll('.notification-item');
+
+            // Lấy các chấm đỏ trên thanh menu
+            const menuNotificationBadge = document.getElementById('menu-notification-badge');
+            const bellNotificationBadge = document.getElementById('notification-badge');
+
+            notificationItems.forEach(item => {
+                item.addEventListener('click', function () {
+                    const notificationId = this.dataset.notificationId;
+                    const isUnread = this.classList.contains('fw-bold');
+
+                    if (!isUnread) return; // Nếu đã đọc rồi thì không làm gì
+
+                    fetch(`/api/notifications/mark-as-read/${notificationId}`, { method: 'POST' })
+                        .then(response => {
+                            if (response.ok) {
+                                // Cập nhật giao diện của dòng vừa nhấn
+                                this.classList.remove('fw-bold');
+                                this.classList.add('opacity-75');
+                                const badge = this.querySelector('.badge-unread');
+                                if (badge) {
+                                    badge.classList.remove('badge-unread');
+                                    badge.classList.add('badge-read');
+                                    badge.textContent = 'Đã đọc';
+                                }
+
+                                // Cập nhật lại số đếm trên các chấm đỏ
+                                function updateBadgeCount(badgeElement) {
+                                    if (badgeElement) {
+                                        let currentCount = parseInt(badgeElement.textContent);
+                                        if (currentCount > 1) {
+                                            badgeElement.textContent = currentCount - 1;
+                                        } else {
+                                            badgeElement.style.display = 'none';
+                                        }
+                                    }
+                                }
+
+                                updateBadgeCount(menuNotificationBadge);
+                                updateBadgeCount(bellNotificationBadge);
+                            }
+                        })
+                        .catch(error => console.error('Lỗi khi đánh dấu thông báo đã đọc:', error));
+                });
+            });
+        });
+    </script>
+}

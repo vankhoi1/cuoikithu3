@@ -1,0 +1,84 @@
+﻿@model IEnumerable<QuanLyThuVien.Models.OverdueStatViewModel>
+
+@{
+    ViewData["Title"] = "Thống kê sách trễ hạn";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<style>
+    .card-header-custom {
+        background: linear-gradient(to right, #434343, #212529);
+        color: white;
+    }
+</style>
+
+<div class="container-fluid py-4">
+    <div class="card shadow-sm">
+        <div class="card-header card-header-custom d-flex justify-content-between align-items-center">
+            <h4 class="mb-0">
+                <i class="bi bi-graph-up-arrow me-2"></i> @ViewData["Title"]
+            </h4>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table id="overdueTable" class="table table-hover align-middle" style="width:100%">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Tên sách</th>
+                            <th>Tên độc giả</th>
+                            <th>Ngày hết hạn</th>
+                            <th class="text-center">Số ngày trễ hạn</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>@item.BookTitle</td>
+                                <td>@item.Username</td>
+                                <td>@item.DueDate.Value.ToString("dd/MM/yyyy")</td>
+                                <td class="text-center fw-bold text-danger">@item.DaysOverdue</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card-footer bg-light d-flex justify-content-between align-items-center">
+            <a asp-action="Index" class="btn btn-secondary">
+                <i class="bi bi-arrow-left-circle-fill me-1"></i> Về Dashboard
+            </a>
+
+            <form asp-action="ExportOverdueToExcel" method="post" class="mb-0">
+                <button type="submit" class="btn btn-success">
+                    <i class="bi bi-file-earmark-excel-fill me-1"></i> Xuất Excel
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $('#overdueTable').DataTable({
+                "order": [[3, "desc"]],
+                language: {
+                    sProcessing: "Đang xử lý...",
+                    sLengthMenu: "Xem _MENU_ mục",
+                    sZeroRecords: "Không có sách nào bị mượn trễ hạn.",
+                    sInfo: "Đang xem _START_ đến _END_ trong tổng số _TOTAL_ mục",
+                    sInfoEmpty: "Đang xem 0 đến 0 trong tổng số 0 mục",
+                    sInfoFiltered: "(được lọc từ _MAX_ mục)",
+                    sSearch: "Tìm kiếm:",
+                    oPaginate: {
+                        sFirst: "Đầu",
+                        sPrevious: "Trước",
+                        sNext: "Tiếp",
+                        sLast: "Cuối"
+                    }
+                }
+            });
+        });
+    </script>
+}

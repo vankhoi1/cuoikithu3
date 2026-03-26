@@ -1,0 +1,202 @@
+﻿@model QuanLyThuVien.Models.HistoryViewModel
+@{
+    ViewData["Title"] = "Lịch Sử Hoạt Động";
+}
+
+<style>
+    .card-header-custom {
+        /* Đổi lại thành màu xanh dương gradient */
+        background: linear-gradient(to right, #007bff, #0056b3);
+        color: white;
+    }
+
+    /* Bảng màu cho các loại trạng thái */
+    .status-badge {
+        font-size: 0.8rem;
+        padding: 0.4em 0.7em;
+        color: white;
+        border-radius: 0.375rem;
+    }
+
+    .status-returned-ontime {
+        background-color: #198754;
+    }
+
+    .status-returned-late {
+        background-color: #ffc107;
+        color: #000 !important;
+    }
+
+    .status-rejected, .status-cancelled {
+        background-color: #6c757d;
+    }
+
+    .status-pending {
+        background-color: #0dcaf0;
+    }
+
+    .status-overdue {
+        background-color: #dc3545;
+    }
+
+    .status-borrowing {
+        background-color: #0d6efd;
+    }
+
+    .status-fulfilled {
+        background-color: #20c997;
+    }
+
+</style>
+
+<div class="container-fluid">
+    <h2 class="mb-4">@ViewData["Title"]</h2>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-header card-header-custom">
+            <h5 class="mb-0"><i class="bi bi-book-fill me-2"></i> Lịch sử Mượn/Trả sách</h5>
+        </div>
+        <div class="card-body">
+            @if (Model.LoanHistory != null && Model.LoanHistory.Any())
+            {
+                <div class="table-responsive">
+                    <table id="loanHistoryTable" class="table table-striped table-hover align-middle" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>Tên Sách</th>
+                                <th>Ngày Yêu Cầu/Mượn</th>
+                                <th>Ngày Trả</th>
+                                <th class="text-center">Trạng Thái</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var loan in Model.LoanHistory)
+                            {
+                                <tr>
+                                    <td><a asp-action="BookDetails" asp-route-bookId="@loan.BookId">@loan.Book?.Title</a></td>
+                                    <td>@loan.BorrowDate.ToString("dd/MM/yyyy")</td>
+                                    <td>@(loan.ReturnDate.HasValue ? loan.ReturnDate.Value.ToString("dd/MM/yyyy") : "Chưa trả")</td>
+                                    <td class="text-center">
+                                        @if (loan.Status == "Returned")
+                                        {
+                                            if (loan.DueDate >= loan.ReturnDate)
+                                            {
+                                                <span class="status-badge status-returned-ontime">Đã trả (Đúng hạn)</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="status-badge status-returned-late">Đã trả (Quá hạn)</span>
+                                            }
+                                        }
+                                        else if (loan.Status == "Rejected")
+                                        {
+                                            <span class="status-badge status-rejected">Bị từ chối</span>
+                                        }
+                                        else if (loan.Status == "Pending")
+                                        {
+                                            <span class="status-badge status-pending">Đang chờ duyệt</span>
+                                        }
+                                        else if (loan.DueDate < DateTime.Now && loan.ReturnDate == null)
+                                        {
+                                            <span class="status-badge status-overdue">Quá hạn</span>
+                                        }
+                                        else if (loan.Status == "Approved")
+                                        {
+                                            <span class="status-badge status-borrowing">Đang mượn</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <p class="text-muted fst-italic">Chưa có lịch sử mượn sách.</p>
+            }
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header card-header-custom">
+            <h5 class="mb-0"><i class="bi bi-calendar2-check-fill me-2"></i> Lịch sử Đặt trước sách</h5>
+        </div>
+        <div class="card-body">
+            @if (Model.ReservationHistory != null && Model.ReservationHistory.Any())
+            {
+                <div class="table-responsive">
+                    <table id="reservationHistoryTable" class="table table-striped table-hover align-middle" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>Tên Sách</th>
+                                <th>Ngày Đặt</th>
+                                <th class="text-center">Trạng Thái</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var reservation in Model.ReservationHistory)
+                            {
+                                <tr>
+                                    <td><a asp-action="BookDetails" asp-route-bookId="@reservation.BookId">@reservation.Book?.Title</a></td>
+                                    <td>@reservation.ReservationDate.ToString("dd/MM/yyyy")</td>
+                                    <td class="text-center">
+                                        @if (reservation.Status == "Cancelled")
+                                        {
+                                            <span class="status-badge status-cancelled">Bạn đã hủy</span>
+                                        }
+                                        else if (reservation.Status == "Rejected")
+                                        {
+                                            <span class="status-badge status-rejected">Bị từ chối</span>
+                                        }
+                                        else if (reservation.Status == "Pending")
+                                        {
+                                            <span class="status-badge status-pending">Đang trong hàng đợi</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="status-badge status-fulfilled">Đã xử lý</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <p class="text-muted fst-italic">Chưa có lịch sử đặt trước.</p>
+            }
+        </div>
+    </div>
+
+    <a asp-controller="Home" asp-action="Index" class="btn btn-link mt-4">← Quay về trang chủ</a>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            const languageConfig = {
+                sProcessing: "Đang xử lý...",
+                sLengthMenu: "Xem _MENU_ mục",
+                sZeroRecords: "Không tìm thấy dòng nào phù hợp",
+                sInfo: "Đang xem _START_ đến _END_ trong tổng số _TOTAL_ mục",
+                sInfoEmpty: "Đang xem 0 đến 0 trong tổng số 0 mục",
+                sInfoFiltered: "(được lọc từ _MAX_ mục)",
+                sSearch: "Tìm kiếm:",
+                oPaginate: { sFirst: "Đầu", sPrevious: "Trước", sNext: "Tiếp", sLast: "Cuối" }
+            };
+
+            $('#loanHistoryTable').DataTable({
+                language: languageConfig,
+                "order": [[1, "desc"]] // Sắp xếp theo ngày mượn mới nhất
+            });
+
+            $('#reservationHistoryTable').DataTable({
+                language: languageConfig,
+                "order": [[1, "desc"]] // Sắp xếp theo ngày đặt mới nhất
+            });
+        });
+    </script>
+}

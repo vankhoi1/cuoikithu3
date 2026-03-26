@@ -1,0 +1,121 @@
+﻿@model IEnumerable<QuanLyThuVien.Models.LibrarianActivity>
+
+@{
+    ViewData["Title"] = "Lịch sử hoạt động của " + ViewData["StaffUsername"];
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="container-fluid py-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+            <h4 class="mb-0"><i class="bi bi-journal-text me-2"></i> @ViewData["Title"]</h4>
+        </div>
+        <div class="card-body">
+
+            <div class="row g-3 mb-4">
+                <div class="col-md-auto">
+                    <div class="p-3 bg-light border rounded">
+                        <h6 class="text-muted mb-1">Tổng số hành động</h6>
+                        <h4 class="mb-0 text-success">@ViewData["TotalHandledCount"]</h4>
+                    </div>
+                </div>
+                <div class="col-md-auto">
+                    <div class="p-3 bg-light border rounded">
+                        <h6 class="text-muted mb-1">Hành động trong hôm nay</h6>
+                        <h4 class="mb-0 text-info">@ViewData["TodayHandledCount"]</h4>
+                    </div>
+                </div>
+            </div>
+
+            @if (!Model.Any())
+            {
+                <div class="alert alert-info" role="alert">
+                    Chưa có hoạt động nào được ghi nhận cho nhân viên này.
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table id="historyTable" class="table table-bordered table-hover" style="width:100%">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 20%;">Thời gian</th>
+                                <th style="width: 25%;">Hành động</th>
+                                <th>Chi tiết</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+                                <tr>
+                                    <td>@item.Timestamp.ToString("dd/MM/yyyy HH:mm:ss")</td>
+                                    <td>
+                                        @{
+                                            var action = item.Action ?? "";
+                                            var details = item.Details ?? "";
+                                            string badgeClass = "bg-secondary"; // Mặc định
+
+                                            if (action.Contains("Duyệt") || action.Contains("Xác nhận"))
+                                            {
+                                                badgeClass = "bg-success";
+                                            }
+                                            else if (action.Contains("Từ chối") || action.Contains("Xóa"))
+                                            {
+                                                badgeClass = "bg-danger";
+                                            }
+                                            else if (action.Contains("Cập nhật") || action.Contains("gia hạn"))
+                                            {
+                                                badgeClass = "bg-warning text-dark";
+                                            }
+                                            else if (action.Contains("Thêm"))
+                                            {
+                                                badgeClass = "bg-info";
+                                            }
+                                        }
+                                        <span class="badge @badgeClass">@action</span>
+                                    </td>
+                                    <td>@Html.DisplayFor(modelItem => item.Details)</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+        <div class="card-footer bg-light">
+            <a asp-action="ManageStaff" class="btn btn-secondary">
+                <i class="bi bi-arrow-left-circle-fill me-1"></i> Quay lại danh sách
+            </a>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Dòng này "dạy" cho DataTables cách nhận biết định dạng ngày của bạn
+            $.fn.dataTable.moment('DD/MM/YYYY HH:mm:ss');
+
+            $('#historyTable').DataTable({
+                // Cấu hình ngôn ngữ tiếng Việt (giữ nguyên)
+                language: {
+                    sProcessing: "Đang xử lý...",
+                    sLengthMenu: "Xem _MENU_ mục",
+                    sZeroRecords: "Không tìm thấy dữ liệu phù hợp",
+                    sInfo: "Đang xem _START_ đến _END_ trong tổng số _TOTAL_ mục",
+                    sInfoEmpty: "Đang xem 0 đến 0 trong tổng số 0 mục",
+                    sInfoFiltered: "(được lọc từ _MAX_ mục)",
+                    sSearch: "Tìm kiếm:",
+                    oPaginate: {
+                        sFirst: "Đầu",
+                        sPrevious: "Trước",
+                        sNext: "Tiếp",
+                        sLast: "Cuối"
+                    }
+                },
+                // Sắp xếp mặc định theo cột thời gian, mới nhất lên đầu
+                "order": [[0, "desc"]]
+            });
+        });
+    </script>
+}
