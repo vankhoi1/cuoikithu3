@@ -15,7 +15,7 @@ using ClosedXML.Excel;
 using QuanLyThuVien;
 namespace QuanLyThuVien.Controllers
 {
-    [Authorize(Roles = "ThuThu")]
+    [Authorize(Roles = "ThuThu")] // Phân quyền Thủ Thư
     public class LibrarianController : Controller
     {
         private readonly LibraryDbContext _context;

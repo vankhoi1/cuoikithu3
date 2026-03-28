@@ -2,7 +2,7 @@
 
 public static class VectorMath
 {
-    // Chuyển đổi byte[] trong DB ngược lại thành mảng float[] để tính toán
+    // Chuyển đổi byte[] trong ngược lại thành mảng float[] để tính toán
     public static float[] ToFloatArray(byte[] bytes)
     {
         if (bytes == null || bytes.Length % 4 != 0) return null;

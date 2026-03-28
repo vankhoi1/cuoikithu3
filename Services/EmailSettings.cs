@@ -1,5 +1,5 @@
 ﻿namespace QuanLyThuVien.Services
-{
+{// Cấu hình email để gửi thông báo
     public class EmailSettings
     {
         public string FromName { get; set; }
