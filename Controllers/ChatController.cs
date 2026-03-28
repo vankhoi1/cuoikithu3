@@ -15,13 +15,13 @@ namespace QuanLyThuVien.Controllers
             _context = context;
         }
 
-        // Trang chat cho độc giả
+        // chat cho độc giả
         public IActionResult ReaderChat()
         {
             return View("~/Views/Reader/Chat.cshtml");
         }
 
-        // Trang dashboard chat của thủ thư
+        // dashboard chat của thủ thư
         public IActionResult ChatDashboard()
         {
             var readers = _context.ChatMessages
@@ -33,7 +33,7 @@ namespace QuanLyThuVien.Controllers
             return View("~/Views/Librarian/ChatDashboard.cshtml");
         }
 
-        // Lấy tin nhắn giữa 2 người
+        // Lấy tin nhắn 2 người
         [HttpGet]
         public IActionResult GetMessages(string reader)
         {
@@ -46,7 +46,7 @@ namespace QuanLyThuVien.Controllers
             }
 
             if (string.IsNullOrEmpty(reader))
-                return BadRequest("Thiếu tên độc giả.");
+                return BadRequest("Thiếu tên của độc giả.");
 
             var messages = _context.ChatMessages
                 .Where(m =>
@@ -70,7 +70,7 @@ namespace QuanLyThuVien.Controllers
         {
             var fromUser = User.Identity?.Name ?? "khach";
             if (string.IsNullOrEmpty(toUser) || string.IsNullOrEmpty(message))
-                return BadRequest("Thiếu thông tin.");
+                return BadRequest("Thiếu thông tin");
 
             var chatMessage = new ChatMessage
             {

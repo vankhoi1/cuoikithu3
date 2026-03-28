@@ -1,8 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using QuanLyThuVien.Data;
-using System.Linq;
+﻿using Microsoft.AspNetCore.Mvc; // MVC
+using QuanLyThuVien.Data; //QLTV
+using Microsoft.EntityFrameworkCore;//Code
 using System.Threading.Tasks;
+using System.Linq;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using QuanLyThuVien.Models; // Để sử dụng BookListViewModel
@@ -24,7 +24,7 @@ namespace QuanLyThuVien.Controllers
 
         public async Task<IActionResult> Index(string searchString, string genre, string filter, List<int> resultIds)
         {
-            // Tải danh sách thể loại cho dropdown (bắt buộc)
+            // Tải danh sách thể loại cho dropdown 
             var allGenreStrings = await _context.Books.Where(b => !string.IsNullOrEmpty(b.Genre)).Select(b => b.Genre).ToListAsync();
             var individualGenres = allGenreStrings.SelectMany(g => g.Split(',')).Select(g => g.Trim()).Where(g => !string.IsNullOrEmpty(g)).Distinct().OrderBy(g => g);
             ViewBag.Genres = individualGenres.ToList();
@@ -56,6 +56,7 @@ namespace QuanLyThuVien.Controllers
 
             var bookList = await booksQuery.ToListAsync();
 
+            // Code xử lý ViewModel giữ nguyên như cũ
             // Code xử lý ViewModel giữ nguyên như cũ
             var borrowedIds = new HashSet<int>();
             var reservedIds = new HashSet<int>();
@@ -170,7 +171,7 @@ namespace QuanLyThuVien.Controllers
 
             if (queryVector == null)
             {
-                TempData["ErrorMessage"] = "Không thể phân tích hình ảnh này.";
+                TempData["ErrorMessage"] = "Không phân tích được hình ảnh này.";
                 return RedirectToAction("Index");
             }
 
