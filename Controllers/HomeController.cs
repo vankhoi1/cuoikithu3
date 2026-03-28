@@ -171,7 +171,7 @@ namespace QuanLyThuVien.Controllers
 
             if (queryVector == null)
             {
-                TempData["ErrorMessage"] = "Không phân tích được hình ảnh này.";
+                TempData["ErrorMessage"] = "Không phân tích được hình ảnh này";
                 return RedirectToAction("Index");
             }
 

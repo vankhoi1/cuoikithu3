@@ -46,7 +46,7 @@ namespace QuanLyThuVien.Controllers
             }
 
             if (string.IsNullOrEmpty(reader))
-                return BadRequest("Thiếu tên của độc giả.");
+                return BadRequest("Thiếu tên độc giả.");
 
             var messages = _context.ChatMessages
                 .Where(m =>
