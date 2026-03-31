@@ -1,0 +1,468 @@
+﻿@{
+    ViewData["Title"] = "Quản lý chat - Thủ thư";
+}
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
+
+<div class="chat-wrapper container-fluid py-3">
+    <div class="row">
+        <div class="col-md-3 col-lg-3 mb-3">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-primary text-white fw-bold">
+                    <i class="bi bi-chat-square-text me-2"></i> Đọc Giả
+                </div>
+                <div class="card-body p-2" style="max-height:70vh; overflow-y:auto;">
+                    @foreach (var reader in ViewBag.Readers)
+                    {
+                        if (reader != "Thủ Thư Của Thư Viện" && reader != "thu-thu")
+                        {
+                            <div class="reader-item d-flex align-items-center p-2 mb-2 rounded-3" data-user="@reader" style="cursor:pointer;">
+                                <div class="avatar-wrapper me-2">
+                                    <div class="avatar bg-primary text-white fw-bold">
+                                        @((!string.IsNullOrEmpty(reader) ? reader.Substring(0, 1).ToUpper() : "?"))
+                                    </div>
+                                    <span class="new-message-indicator"></span>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <span class="fw-semibold">@reader</span><br>
+                                    <small class="text-muted">Nhấn để trò chuyện</small>
+                                </div>
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-9 col-lg-9">
+            <div class="card shadow-sm border-0">
+
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <div>
+                        <i class="bi bi-person-circle me-2"></i>
+                        <span id="chatUser" class="fw-bold">Chọn đọc giả để trò chuyện</span>
+                    </div>
+
+                    <div class="d-flex">
+                        <a asp-controller="Librarian" asp-action="Index" class="btn btn-sm btn-outline-light me-2">
+                            <i class="bi bi-arrow-left-circle me-1"></i> Quay về
+                        </a>
+                        <button id="closeChat" class="btn btn-sm btn-light d-none">Đóng</button>
+                    </div>
+                </div>
+                <div class="card-body chat-body" id="chatMessages" style="height:60vh; overflow-y:auto;">
+                    <div class="text-muted text-center mt-5">
+                        💬 Chưa có cuộc trò chuyện nào được chọn
+                    </div>
+                </div>
+
+                <div class="card-footer bg-light">
+                    <div class="d-flex align-items-center mb-2">
+                        <button class="btn btn-sm btn-outline-secondary me-2" id="emojiBtn" title="Chèn biểu tượng cảm xúc">
+                            <i class="bi bi-emoji-smile"></i>
+                        </button>
+                        <input type="file" id="imageInput" class="d-none" accept="image/*" />
+                        <button class="btn btn-sm btn-outline-secondary" id="imageBtn" title="Gửi hình ảnh">
+                            <i class="bi bi-image"></i>
+                        </button>
+                    </div>
+
+                    <div class="input-group">
+                        <input id="chatInput" class="form-control" placeholder="Nhập tin nhắn..." />
+                        <button id="sendBtn" class="btn btn-primary">
+                            <i class="bi bi-send-fill"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const user = "thu-thu";
+            let currentReader = "";
+            const chatMessagesDiv = document.getElementById("chatMessages");
+            const chatUserLabel = document.getElementById("chatUser");
+            const closeChatBtn = document.getElementById("closeChat");
+            const chatInput = document.getElementById('chatInput');
+            const storageKey = 'librarian_chat_read_timestamps'; // Khóa để lưu vào bộ nhớ
+
+            // === LOGIC MỚI: Các hàm trợ giúp cho LocalStorage ===
+
+            // Lấy tất cả timestamp đã lưu
+            function getReadTimestamps() {
+                return JSON.parse(localStorage.getItem(storageKey)) || {};
+            }
+
+            // Lấy timestamp CỤ THỂ cho 1 user
+            function getLastReadTime(username) {
+                const timestamps = getReadTimestamps();
+                return timestamps[username] ? new Date(timestamps[username]) : new Date(0);
+            }
+
+            // LƯU timestamp mới (dạng chuỗi ISO) cho 1 user
+            function setLastReadTime(username, date) {
+                if (!username || !date) return;
+                const timestamps = getReadTimestamps();
+                timestamps[username] = date.toISOString(); // Lưu dưới dạng chuỗi ISO
+                localStorage.setItem(storageKey, JSON.stringify(timestamps));
+            }
+
+            // === KẾT THÚC LOGIC MỚI ===
+
+
+            const connection = new signalR.HubConnectionBuilder()
+                .withUrl("/chathub?user=" + encodeURIComponent(user))
+                .withAutomaticReconnect()
+                .build();
+
+            // Lắng nghe tin nhắn
+            connection.on("ReceiveMessage", (fromUser, message) => {
+                const messageTime = new Date();
+
+                if (fromUser === currentReader || fromUser === user) {
+                    appendMessage(fromUser, message, messageTime);
+
+                    if (fromUser === currentReader) {
+                        setLastReadTime(currentReader, messageTime);
+                    }
+                } else {
+                    const readerItem = document.querySelector(`.reader-item[data-user="${fromUser}"]`);
+                    if (readerItem) {
+                        readerItem.classList.add("has-new-message");
+                    }
+                }
+            });
+
+            // Hiển thị tin nhắn
+            function appendMessage(from, msg, sentAt) {
+                msg = decodeURIComponent(msg);
+                const div = document.createElement("div");
+
+                const time = (sentAt ? new Date(sentAt) : new Date()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+                div.className = from === user ? "chat-bubble me" : "chat-bubble you";
+
+                if (msg.startsWith("[img]")) {
+                    const imgUrl = msg.replace("[img]", "");
+                    div.innerHTML = `
+                        <div class="bubble-text">
+                            <img src="${imgUrl}" class="chat-img"
+                                 style="max-width:150px; max-height:150px; border-radius:10px; object-fit:cover; cursor:pointer;">
+                        </div>
+                        <div class="time">${time}</div>`;
+                }
+                else if (msg.includes("<img")) {
+                    div.innerHTML = `
+                        <div class="bubble-text">
+                            ${msg.replace(/<img /g, '<img class="chat-img" style="max-width:150px; max-height:150px; border-radius:10px; object-fit:cover; cursor:pointer;" ')}
+                        </div>
+                        <div class="time">${time}</div>`;
+                }
+                else {
+                    div.innerHTML = `
+                        <div class="bubble-text">${msg}</div>
+                        <div class="time">${time}</div>`;
+                }
+
+                chatMessagesDiv.appendChild(div);
+                chatMessagesDiv.scrollTop = chatMessagesDiv.scrollHeight;
+
+                div.querySelectorAll(".chat-img").forEach(img => {
+                    img.addEventListener("click", () => openImageViewer(img.src));
+                });
+            }
+
+            // Hàm mở ảnh to
+            function openImageViewer(src) {
+                const existing = document.querySelector(".img-viewer");
+                if (existing) existing.remove();
+                const overlay = document.createElement("div");
+                overlay.classList.add("img-viewer");
+                overlay.style.cssText = `position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); display: flex; justify-content: center; align-items: center; z-index: 9999;`;
+                const img = document.createElement("img");
+                img.src = src;
+                img.style.cssText = `max-width: 90vw; max-height: 90vh; border-radius: 12px; box-shadow: 0 0 20px rgba(255,255,250,0.3); animation: zoomIn 0.2s ease;`;
+                const closeBtn = document.createElement("span");
+                closeBtn.textContent = "✕";
+                closeBtn.style.cssText = `position: absolute; top: 20px; right: 30px; color: white; font-size: 30px; cursor: pointer; font-weight: bold;`;
+                closeBtn.onclick = () => overlay.remove();
+                overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+                overlay.appendChild(img);
+                overlay.appendChild(closeBtn);
+                document.body.appendChild(overlay);
+            }
+
+            // Load tin nhắn VÀ LƯU THỜI GIAN ĐỌC
+            document.querySelectorAll(".reader-item").forEach(item => {
+                item.addEventListener("click", async () => {
+
+                    item.classList.remove("has-new-message");
+
+                    currentReader = item.dataset.user;
+                    chatUserLabel.textContent = currentReader;
+                    closeChatBtn.classList.remove("d-none");
+                    chatMessagesDiv.innerHTML = "<p class='text-center text-muted mt-4'>Đang tải tin nhắn...</p>";
+
+                    const res = await fetch(`/Chat/GetMessages?reader=${encodeURIComponent(currentReader)}`);
+                    const data = await res.json();
+                    chatMessagesDiv.innerHTML = "";
+
+                    let lastMessageTime = null;
+
+                    data.forEach(m => {
+                        const messageTime = new Date(m.sentAt);
+                        appendMessage(m.fromUser, m.message, messageTime);
+                        lastMessageTime = messageTime;
+                    });
+
+                    // LƯU LẠI THỜI GIAN ĐỌC CUỐI CÙNG
+                    if (data.length > 0) {
+                        const lastMessage = data[data.length - 1];
+                        // Chỉ lưu nếu tin nhắn cuối là của độc giả
+                        if(lastMessage.fromUser === currentReader) {
+                             setLastReadTime(currentReader, new Date(lastMessage.sentAt));
+                        }
+                    }
+                });
+            });
+
+            // KIỂM TRA TIN CHƯA ĐỌC KHI TẢI TRANG
+            async function checkAllUnreadMessagesOnLoad() {
+                const readerItems = document.querySelectorAll(".reader-item");
+                const timestamps = getReadTimestamps();
+
+                const checks = Array.from(readerItems).map(item => (async () => {
+                    const username = item.dataset.user;
+                    if (!username) return;
+
+                    const lastRead = timestamps[username] ? new Date(timestamps[username]) : new Date(0);
+
+                    try {
+                        const res = await fetch(`/Chat/GetMessages?reader=${encodeURIComponent(username)}`);
+                        const data = await res.json();
+
+                        if (data.length > 0) {
+                            const lastMessage = data[data.length - 1];
+                            const lastMessageTime = new Date(lastMessage.sentAt);
+
+                            if (lastMessageTime > lastRead && lastMessage.fromUser !== user) {
+                                item.classList.add("has-new-message");
+                            }
+                        }
+                    } catch (err) {
+                        console.error(`Lỗi khi kiểm tra tin nhắn cho ${username}:`, err);
+                    }
+                })());
+
+                await Promise.all(checks);
+                console.log("Đã kiểm tra xong tin nhắn chưa đọc.");
+            }
+
+
+            // (Code Gửi tin nhắn, Đóng chat, Emoji, Gửi ảnh... không thay đổi)
+
+            // Gửi tin nhắn
+            document.getElementById("sendBtn").onclick = async () => {
+                const msg = document.getElementById("chatInput").value.trim();
+                if (msg && currentReader) {
+                    await connection.invoke("SendMessage", user, currentReader, encodeURIComponent(msg));
+                    document.getElementById("chatInput").value = "";
+                }
+            };
+
+            document.getElementById("chatInput").addEventListener("keypress", e => {
+                if (e.key === "Enter") document.getElementById("sendBtn").click();
+            });
+
+            closeChatBtn.onclick = () => {
+                currentReader = "";
+                chatUserLabel.textContent = "Chọn đọc giả để trò chuyện";
+                chatMessagesDiv.innerHTML = "<div class='text-muted text-center mt-5'>💬 Chưa có cuộc trò chuyện nào được chọn</div>";
+                closeChatBtn.classList.add("d-none");
+            };
+
+            // EMOJI PICKER
+            const emojiBtn = document.getElementById('emojiBtn');
+            emojiBtn.onclick = () => {
+                let oldPicker = document.querySelector(".emoji-picker");
+                if (oldPicker) { oldPicker.remove(); return; }
+                const picker = document.createElement("div");
+                picker.classList.add("emoji-picker");
+                const emojis = ["😀", "😃", "😄", "😁", "😆", "😅", "😂", "😊", "😇", "😉", "😍", "😘", "😜", "😎", "😢", "😭", "😡", "🤣", "🤔", "🙄", "👍", "👎", "❤️", "💔", "🙏", "👏", "🎉"];
+                picker.style.cssText = `background:white; border:1px solid #ccc; padding:8px; border-radius:10px; position:absolute; bottom:120px; left:10px; display:grid; grid-template-columns:repeat(6,1fr); gap:5px; font-size:20px; z-index:999; box-shadow:0 2px 8px rgba(0,0,0,0.15);`;
+                emojis.forEach(e => {
+                    const span = document.createElement("span");
+                    span.textContent = e;
+                    span.style.cursor = "pointer";
+                    span.addEventListener("click", () => {
+                        chatInput.value += e;
+                        chatInput.focus();
+                        picker.remove();
+                    });
+                    picker.appendChild(span);
+                });
+                document.querySelector(".card-footer").appendChild(picker);
+                document.addEventListener("click", function closePicker(ev) {
+                    if (picker && !picker.contains(ev.target) && ev.target !== emojiBtn) {
+                        picker.remove();
+                        document.removeEventListener("click", closePicker);
+                    }
+                }, { once: true });
+            };
+
+            // GỬI ẢNH
+            const imageBtn = document.getElementById('imageBtn');
+            const imageInput = document.getElementById('imageInput');
+            imageBtn.addEventListener('click', () => imageInput.click());
+            imageInput.addEventListener('change', async () => {
+                if (!currentReader) { alert("Vui lòng chọn đọc giả trước!"); return; }
+                const file = imageInput.files[0];
+                if (!file) return;
+                const formData = new FormData();
+                formData.append("image", file);
+                try {
+                    const res = await fetch("/Chat/UploadImage", { method: "POST", body: formData });
+                    const data = await res.json();
+                    if (data.url) {
+                        const imgTag = `<img src="${data.url}" class="chat-img" />`;
+                        await connection.invoke("SendMessage", user, currentReader, imgTag);
+                    } else { alert("❌ Không tải được ảnh lên máy chủ!"); }
+                } catch (err) { console.error("Lỗi gửi ảnh:", err); }
+            });
+
+
+            // BẮT ĐẦU KẾT NỐI VÀ KIỂM TRA TIN CHƯA ĐỌC
+            connection.start()
+                .then(() => {
+                    console.log("SignalR connected (ChatDashboard)");
+                    // GỌI HÀM MỚI TẠI ĐÂY
+                    checkAllUnreadMessagesOnLoad();
+                })
+                .catch(err => console.error("❌ SignalR error (ChatDashboard):", err));
+        });
+    </script>
+}
+
+<style>
+    body {
+        background: #f4f6f9;
+    }
+
+    .avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: #0d6efd;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+    }
+
+    .reader-item {
+        transition: 0.2s ease;
+        background-color: #f8f9fa;
+    }
+
+        .reader-item:hover {
+            background-color: #e9f2ff;
+            transform: translateX(4px);
+        }
+
+    .chat-bubble {
+        margin-bottom: 10px;
+        max-width: 75%;
+        padding: 10px 14px;
+        border-radius: 16px;
+        display: inline-block;
+        animation: fadeIn 0.3s ease;
+        word-wrap: break-word;
+    }
+
+        .chat-bubble.you {
+            background: #e9ecef;
+            color: #000;
+            text-align: left;
+            float: left;
+            clear: both;
+        }
+
+        .chat-bubble.me {
+            background: #0d6efd;
+            color: #fff;
+            text-align: right;
+            float: right;
+            clear: both;
+        }
+
+        .chat-bubble .time {
+            font-size: 0.75rem;
+            color: #888;
+            margin-top: 2px;
+            text-align: right;
+        }
+
+    .chat-img {
+        max-width: 200px;
+        border-radius: 10px;
+        margin-top: 5px;
+        cursor: pointer;
+    }
+
+    /* CSS CHO CHẤM ĐỎ */
+    .reader-item .avatar-wrapper {
+        position: relative;
+    }
+
+    .reader-item .new-message-indicator {
+        position: absolute;
+        bottom: 2px;
+        right: 2px;
+        width: 12px;
+        height: 12px;
+        background-color: #dc3545; /* Màu đỏ */
+        border-radius: 50%;
+        border: 2px solid white;
+        display: none; /* Ẩn mặc định */
+    }
+
+    .reader-item.has-new-message .new-message-indicator {
+        display: block;
+    }
+    /* KẾT THÚC CSS CHẤM ĐỎ */
+
+  
+    @@keyframes fadeIn {
+        from
+
+    {
+        opacity: 0;
+        transform: translateY(5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    }
+
+    @@keyframes zoomIn {
+        from {
+            transform: scale(0.9);
+            opacity: 0;
+        }
+
+        to {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+</style>

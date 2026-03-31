@@ -1,0 +1,160 @@
+﻿@model List<QuanLyThuVien.Models.AccountViewModel>
+
+@{
+    ViewData["Title"] = "Quản lý Độc giả";
+}
+
+<style>
+    .card-header-custom {
+        background: linear-gradient(to right, #007bff, #0056b3);
+        color: white;
+    }
+
+    /* Tùy chỉnh màu sắc cho các trạng thái */
+    .badge-active {
+        background-color: #28a745 !important; /* Xanh lá */
+        color: white;
+    }
+
+    .badge-inactive {
+        background-color: #ffc107 !important; /* Vàng cam */
+        color: #212529;
+    }
+
+    /* Tùy chỉnh màu cho các nút hành động */
+    .btn-action {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        border: none;
+    }
+
+        .btn-action:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+    .btn-action-activate {
+        background-color: #28a745;
+        color: white;
+    }
+
+    .btn-action-deactivate {
+        background-color: #ffc107;
+        color: #212529;
+    }
+
+    .btn-action-details {
+        background-color: #0dcaf0;
+        color: white;
+    }
+</style>
+
+<div class="card shadow-sm">
+    <div class="card-header card-header-custom">
+        <h4 class="mb-0">
+            <i class="bi bi-people-fill me-2"></i> @ViewData["Title"]
+        </h4>
+    </div>
+
+    <div class="card-body">
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                @TempData["SuccessMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                @TempData["ErrorMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+
+        <table id="readersTable" class="table table-striped table-hover align-middle" style="width:100%">
+            <thead>
+                <tr>
+                    <th>Tên Người Dùng</th>
+                    <th>Email</th>
+                    <th class="text-center">Trạng Thái</th>
+                    <th class="text-center">Hành động</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var user in Model)
+                {
+                    <tr>
+                        <td>@user.Username</td>
+                        <td>@user.Email</td>
+                        <td class="text-center">
+                            @if (user.IsActive)
+                            {
+                                <span class="badge badge-active">Hoạt động</span>
+                            }
+                            else
+                            {
+                                <span class="badge badge-inactive">Vô hiệu hóa</span>
+                            }
+                        </td>
+                        <td class="text-center">
+                            <div class="btn-group" role="group">
+                                <form asp-action="ToggleUserStatus" method="post" class="d-inline">
+                                    <input type="hidden" name="username" value="@user.Username" />
+                                    @Html.AntiForgeryToken()
+
+                                    @if (user.IsActive)
+                                    {
+                                        <button type="submit" class="btn btn-sm btn-action btn-action-deactivate" title="Vô hiệu hóa tài khoản">
+                                            <i class="bi bi-x-circle-fill"></i> Vô hiệu hóa
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <button type="submit" class="btn btn-sm btn-action btn-action-activate" title="Kích hoạt lại tài khoản">
+                                            <i class="bi bi-check-circle-fill"></i> Kích hoạt
+                                        </button>
+                                    }
+                                </form>
+                                <a asp-action="ReaderDetails" asp-route-username="@user.Username" class="btn btn-sm btn-action btn-action-details" title="Xem chi tiết độc giả">
+                                    <i class="bi bi-person-lines-fill"></i> Chi tiết
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <div class="card-footer bg-light">
+        <a asp-controller="Librarian" asp-action="Index" class="btn btn-secondary">
+            <i class="bi bi-arrow-left-circle-fill me-1"></i> Quay về Bảng điều khiển
+        </a>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $('#readersTable').DataTable({
+                language: {
+                    sProcessing: "Đang xử lý...",
+                    sLengthMenu: "Xem _MENU_ độc giả",
+                    sZeroRecords: "Không tìm thấy độc giả nào phù hợp",
+                    sInfo: "Đang xem _START_ đến _END_ trong tổng số _TOTAL_ độc giả",
+                    sInfoEmpty: "Đang xem 0 đến 0 trong tổng số 0 độc giả",
+                    sInfoFiltered: "(được lọc từ _MAX_ độc giả)",
+                    sSearch: "Tìm kiếm:",
+                    oPaginate: {
+                        sFirst: "Đầu",
+                        sPrevious: "Trước",
+                        sNext: "Tiếp",
+                        sLast: "Cuối"
+                    }
+                },
+                "columnDefs": [
+                    { "orderable": false, "targets": 3 }
+                ]
+            });
+        });
+    </script>
+}

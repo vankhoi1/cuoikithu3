@@ -1,0 +1,19 @@
+﻿@model QuanLyThuVien.Models.Genre
+
+@{
+    ViewData["Title"] = "Xóa Thể loại";
+}
+
+<h2>@ViewData["Title"]</h2>
+
+<div class="alert alert-danger">
+    Bạn có chắc chắn muốn xóa thể loại "<strong>@Model.Name</strong>"?
+    <br />Lưu ý: Thể loại này sẽ không thể khôi phục và tất cả sách liên quan phải được cập nhật trước.
+</div>
+
+<form asp-action="DeleteGenre" method="post">
+    <input type="hidden" asp-for="GenreId" />
+    <input type="submit" value="Xóa" class="btn btn-danger" /> |
+    <a asp-action="ManageGenres" class="btn btn-secondary">Hủy</a>
+    @Html.AntiForgeryToken()
+</form>
