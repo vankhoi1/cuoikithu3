@@ -1,0 +1,120 @@
+﻿@model QuanLyThuVien.Models.HistoryViewModel
+@{
+    ViewData["Title"] = $"Lịch Sử Hoạt Động - {ViewData["ReaderUsername"]}";
+}
+
+<h2>@ViewData["Title"]</h2>
+
+<h4 class="mt-4">Lịch sử Mượn/Trả sách</h4>
+@if (Model.LoanHistory != null && Model.LoanHistory.Any())
+{
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover">
+            <thead class="table-light">
+                <tr>
+                    <th>Tên Sách</th>
+                    <th>Ngày Yêu Cầu/Mượn</th>
+                    <th>Ngày Trả</th>
+                    <th>Trạng Thái</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var loan in Model.LoanHistory)
+                {
+                    <tr>
+                        <td>
+                            <a asp-action="BookDetails" asp-controller="Account" asp-route-bookId="@loan.BookId">@loan.Book?.Title</a>
+                        </td>
+                        <td>@loan.BorrowDate.ToString("dd/MM/yyyy")</td>
+                        <td>@(loan.ReturnDate.HasValue ? loan.ReturnDate.Value.ToString("dd/MM/yyyy") : "Chưa trả")</td>
+                        <td>
+                            @if (loan.Status == "Returned")
+                            {
+                                if (loan.DueDate >= loan.ReturnDate)
+                                {
+                                    <span class="badge bg-success">Đã trả (Đúng hạn)</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-warning text-dark">Đã trả (Quá hạn)</span>
+                                }
+                            }
+                            else if (loan.Status == "Rejected")
+                            {
+                                <span class="badge bg-secondary">Bị từ chối</span>
+                            }
+                            else if (loan.Status == "Pending")
+                            {
+                                <span class="badge bg-info">Đang chờ duyệt</span>
+                            }
+                            else if (loan.DueDate < DateTime.Now)
+                            {
+                                <span class="badge bg-danger">Quá hạn</span>
+                            }
+                            else if (loan.Status == "Approved")
+                            {
+                                <span class="badge bg-primary">Đang mượn</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+else
+{
+    <p class="text-muted">Độc giả này chưa có lịch sử mượn sách.</p>
+}
+
+<h4 class="mt-5">Lịch sử Đặt trước sách</h4>
+@if (Model.ReservationHistory != null && Model.ReservationHistory.Any())
+{
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover">
+            <thead class="table-light">
+                <tr>
+                    <th>Tên Sách</th>
+                    <th>Ngày Đặt</th>
+                    <th>Trạng Thái</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var reservation in Model.ReservationHistory)
+                {
+                    <tr>
+                        <td>
+                            <a asp-action="BookDetails" asp-controller="Account" asp-route-bookId="@reservation.BookId">@reservation.Book?.Title</a>
+                        </td>
+                        <td>@reservation.ReservationDate.ToString("dd/MM/yyyy")</td>
+                        <td>
+                            @* --- Logic hiển thị trạng thái theo góc nhìn Thủ thư --- *@
+                            @if (reservation.Status == "Cancelled")
+                            {
+                                <span class="badge bg-secondary">Độc giả tự hủy</span>
+                            }
+                            else if (reservation.Status == "Rejected")
+                            {
+                                <span class="badge bg-danger">Thủ thư từ chối</span>
+                            }
+                            else if (reservation.Status == "Pending")
+                            {
+                                <span class="badge bg-primary">Đang trong hàng đợi</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-success">Đã được xử lý</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+else
+{
+    <p class="text-muted">Độc giả này chưa có lịch sử đặt trước.</p>
+}
+
+<a asp-action="ReaderDetails" asp-route-username="@ViewData["ReaderUsername"]" class="btn btn-link mt-3">← Quay về chi tiết độc giả</a>

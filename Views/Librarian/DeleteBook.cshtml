@@ -1,0 +1,25 @@
+﻿@model QuanLyThuVien.Models.Book
+
+@{
+    ViewData["Title"] = "Xác nhận Xóa sách";
+}
+
+<h2>@ViewData["Title"]</h2>
+
+<h3>Bạn có chắc chắn muốn xóa cuốn sách này?</h3>
+<div>
+    <h4>@Model.Title</h4>
+    <hr />
+    <dl class="row">
+        <dt class="col-sm-2">Tác giả</dt>
+        <dd class="col-sm-10">@Model.Author</dd>
+        <dt class="col-sm-2">Thể loại</dt>
+        <dd class="col-sm-10">@Model.Genre</dd>
+    </dl>
+
+    <form asp-action="DeleteBook" method="post">
+        <input type="hidden" asp-for="BookId" />
+        <input type="submit" value="Xóa" class="btn btn-danger" /> |
+        <a asp-action="ManageBooks">Quay lại danh sách</a>
+    </form>
+</div>

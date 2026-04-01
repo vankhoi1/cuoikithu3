@@ -1,0 +1,333 @@
+﻿@model QuanLyThuVien.Models.ReaderDetailsViewModel
+
+@{
+    ViewData["Title"] = "Chi tiết Độc giả: " + Model.Username;
+}
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success" role="alert">
+        @TempData["SuccessMessage"]
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger" role="alert">
+        @TempData["ErrorMessage"]
+    </div>
+}
+<style>
+    /* Các style chung vẫn giữ lại để trang có bố cục tốt */
+    .table th, .table td {
+        vertical-align: middle;
+        text-align: left;
+    }
+
+    .table th {
+        background-color: #f2f2f2;
+    }
+
+    .btn-sm {
+        padding: .25rem .5rem;
+        font-size: .875rem;
+        line-height: 1.5;
+        border-radius: .2rem;
+        margin-right: 5px; /* Khoảng cách giữa các nút */
+    }
+
+    .card {
+        margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,.1);
+    }
+
+    .card-header {
+        background-color: #007bff;
+        color: white;
+        font-weight: bold;
+    }
+
+    .status-active {
+        color: green;
+        font-weight: bold;
+    }
+
+    .status-inactive {
+        color: red;
+        font-weight: bold;
+    }
+
+    .badge {
+        display: inline-block;
+        padding: 0.35em 0.65em;
+        font-size: 0.75em;
+        font-weight: 700;
+        line-height: 1;
+        color: #fff;
+        text-align: center;
+        white-space: nowrap;
+        vertical-align: baseline;
+        border-radius: 0.25rem;
+    }
+
+    .bg-primary {
+        background-color: #007bff !important;
+    }
+
+    .bg-success {
+        background-color: #28a745 !important;
+    }
+
+    .bg-warning {
+        background-color: #ffc107 !important;
+        color: #212529 !important;
+    }
+
+    .bg-danger {
+        background-color: #dc3545 !important;
+    }
+
+    .bg-info {
+        background-color: #17a2b8 !important;
+    }
+</style>
+
+<div class="card">
+    <div class="card-header">
+        <h1>Chi tiết Độc giả: @Model.Username</h1>
+    </div>
+    <div class="card-body">
+        <h4>Thông tin cá nhân</h4>
+        <hr />
+        <dl class="row">
+            <dt class="col-sm-3">Tên người dùng:</dt>
+            <dd class="col-sm-9">@Model.Username</dd>
+
+            <dt class="col-sm-3">Họ và Tên:</dt>
+            <dd class="col-sm-9">@Model.HoTen</dd>
+
+            <dt class="col-sm-3">Email:</dt>
+            <dd class="col-sm-9">@Model.Email</dd>
+
+            <dt class="col-sm-3">Số điện thoại:</dt>
+            <dd class="col-sm-9">@Model.SoDienThoai</dd>
+
+            <dt class="col-sm-3">Ngày sinh:</dt>
+            <dd class="col-sm-9">@Model.NgaySinh?.ToShortDateString()</dd>
+
+            <dt class="col-sm-3">Địa chỉ:</dt>
+            <dd class="col-sm-9">@Model.DiaChi</dd>
+
+            <dt class="col-sm-3">Trạng thái tài khoản:</dt>
+            <dd class="col-sm-9">
+                @if (Model.IsActive)
+                {
+                    <span class="status-active">Hoạt động</span>
+                }
+                else
+                {
+                    <span class="status-inactive">Vô hiệu hóa</span>
+                }
+            </dd>
+        </dl>
+    </div>
+</div>
+
+<div class="card mt-4">
+    <div class="card-header">
+        <h4>Các sách đang mượn</h4>
+    </div>
+    <div class="card-body">
+        @if (Model.CurrentlyBorrowedBooks != null && Model.CurrentlyBorrowedBooks.Any())
+        {
+            <div class="table-responsive shadow-sm rounded">
+                <table class="table table-bordered table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Tên sách</th>
+                            <th>Ngày mượn</th>
+                            <th>Hạn trả</th>
+                            <th>Trạng thái</th>
+                            <th class="text-center">Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var loan in Model.CurrentlyBorrowedBooks)
+                        {
+                            <tr>
+                                <td>@loan.Book.Title</td>
+                                <td>@loan.BorrowDate.ToString("dd/MM/yyyy")</td>
+                                <td>@(loan.DueDate.HasValue ? loan.DueDate.Value.ToString("dd/MM/yyyy") : "N/A")</td>
+                                <td>
+                                    <span class="badge @(loan.DueDate < DateTime.Now ? "bg-danger" : "bg-primary")">
+                                        @(loan.DueDate < DateTime.Now ? "Quá hạn" : "Chưa quá hạn")
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <form asp-action="ReturnBook" asp-controller="Librarian" method="post" style="display:inline;">
+                                        <input type="hidden" name="loanId" value="@loan.LoanId" />
+                                        <button type="submit" class="btn btn-info btn-sm">Xác nhận trả</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <p class="text-muted fst-italic">Độc giả này không có sách nào đang mượn.</p>
+        }
+    </div>
+</div>
+
+<div class="card mt-4">
+    <div class="card-header">
+        <h4>Các sách đang đặt trước</h4>
+    </div>
+    <div class="card-body">
+        @if (Model.PendingReservations != null && Model.PendingReservations.Any())
+        {
+            <div class="table-responsive shadow-sm rounded">
+                <table class="table table-bordered table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Tên sách</th>
+                            <th>Ngày đặt</th>
+                            <th>Trạng thái</th>
+                            <th class="text-center">Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var reservation in Model.PendingReservations)
+                        {
+                            <tr>
+                                <td>@reservation.Book.Title</td>
+                                <td>@reservation.ReservationDate.ToString("dd/MM/yyyy")</td>
+                                <td>
+                                    <span class="badge @(reservation.Status == "Pending" ? "bg-warning" : (reservation.Status == "Ready" ? "bg-success" : (reservation.Status == "Cancelled" ? "bg-danger" : "bg-info")))">
+                                        @reservation.Status
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <form asp-action="RejectReservation" asp-controller="Librarian" method="post" style="display:inline;">
+                                        <input type="hidden" name="reservationId" value="@reservation.ReservationId" />
+                                        <input type="hidden" name="sourceUsername" value="@Model.Username" />
+                                        <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Bạn có chắc muốn từ chối yêu cầu đặt trước này?');">Từ chối</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <p class="text-muted fst-italic">Độc giả này không có sách nào đang đặt trước.</p>
+        }
+    </div>
+</div>
+
+<div class="card mt-4">
+    <div class="card-header">
+        <h4>Yêu cầu mượn sách đang chờ duyệt</h4>
+    </div>
+    <div class="card-body">
+        @if (Model.PendingLoanRequests != null && Model.PendingLoanRequests.Any())
+        {
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Sách</th>
+                            <th>Người mượn</th>
+                            <th>Ngày yêu cầu</th>
+                            <th class="text-center">Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var loanRequest in Model.PendingLoanRequests)
+                        {
+                            <tr>
+                                <td>@loanRequest.Book.Title</td>
+                                <td>@loanRequest.Username</td>
+                                <td>@loanRequest.BorrowDate.ToString("dd/MM/yyyy HH:mm")</td>
+                                <td class="text-center">
+                                    <form asp-action="ApproveLoan" asp-controller="Librarian" method="post" style="display:inline-block; margin-right: 5px;">
+                                        <input type="hidden" name="loanId" value="@loanRequest.LoanId" />
+                                        <button type="submit" class="btn btn-success btn-sm">Duyệt</button>
+                                    </form>
+                                    <form asp-action="RejectLoan" asp-controller="Librarian" method="post" style="display:inline-block;">
+                                        <input type="hidden" name="loanId" value="@loanRequest.LoanId" />
+                                        <button type="submit" class="btn btn-danger btn-sm">Từ chối</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <p class="text-muted fst-italic">Độc giả này không có yêu cầu mượn sách nào đang chờ duyệt.</p>
+        }
+    </div>
+</div>
+
+<div class="card mt-4">
+    <div class="card-header">
+        <h4>Yêu cầu gia hạn sách đang chờ duyệt</h4>
+    </div>
+    <div class="card-body">
+        @if (Model.PendingExtensionRequests != null && Model.PendingExtensionRequests.Any())
+        {
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Tên sách</th>
+                            <th>Người mượn</th>
+                            <th>Ngày yêu cầu</th>
+                            <th>Hạn trả hiện tại</th>
+                            <th>Hạn trả mới (dự kiến)</th>
+                            <th>Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var req in Model.PendingExtensionRequests)
+                        {
+                            <tr>
+                                <td>@req.BookTitle</td>
+                                <td>@req.Username</td>
+                                <td>@req.RequestDate.ToString("dd/MM/yyyy HH:mm")</td>
+                                <td>@(req.DueDate?.ToString("dd/MM/yyyy"))</td>
+                                <td><strong>@(req.NewDueDate?.ToString("dd/MM/yyyy"))</strong></td>
+                                <td>
+                                    <form asp-action="ApproveExtension" asp-controller="Librarian" method="post" style="display:inline;">
+                                        <input type="hidden" name="notificationId" value="@req.NotificationId" />
+                                        <button type="submit" class="btn btn-success btn-sm">Duyệt</button>
+                                    </form>
+                                    <form asp-action="RejectExtension" asp-controller="Librarian" method="post" style="display:inline;">
+                                        <input type="hidden" name="notificationId" value="@req.NotificationId" />
+                                        <button type="submit" class="btn btn-danger btn-sm">Từ chối</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <p class="text-muted fst-italic">Độc giả này không có yêu cầu gia hạn nào đang chờ duyệt.</p>
+        }
+    </div>
+</div>
+
+<div class="mt-4">
+    <a asp-action="ManageReaders" class="btn btn-secondary">Quay lại danh sách độc giả</a>
+    <a asp-action="ReaderHistory" asp-route-username="@Model.Username" class="btn btn-primary">Xem Lịch sử Hoạt động</a>
+</div>

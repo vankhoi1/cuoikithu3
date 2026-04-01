@@ -1,0 +1,120 @@
+﻿@model List<QuanLyThuVien.Models.PopularBookViewModel>
+
+@{
+    ViewData["Title"] = "Sách Phổ Biến Nhất";
+    Layout = "~/Views/Shared/_Layout.cshtml"; // Hoặc _LibrarianLayout.cshtml
+}
+
+<style>
+    .card-header-custom {
+        background: linear-gradient(to right, #007bff, #0056b3);
+        color: white;
+    }
+
+    .rank-badge {
+        font-size: 1.2rem;
+        padding: 0.4rem;
+        min-width: 30px;
+        border-radius: 50%;
+        color: #212529;
+        font-weight: bold;
+    }
+
+    .rank-1 {
+        background-color: #ffd700;
+    }
+    /* Vàng */
+    .rank-2 {
+        background-color: #c0c0c0;
+    }
+    /* Bạc */
+    .rank-3 {
+        background-color: #cd7f32;
+    }
+    /* Đồng */
+</style>
+
+<div class="card shadow-sm">
+    <div class="card-header card-header-custom d-flex justify-content-between align-items-center">
+        <h4 class="mb-0">
+            <i class="bi bi-trophy-fill me-2"></i> @ViewData["Title"]
+        </h4>
+    </div>
+    <div class="card-body">
+        <table id="popularBooksTable" class="table table-striped table-hover align-middle" style="width:100%">
+            <thead>
+                <tr>
+                    <th class="text-center" style="width: 5%;">Hạng</th>
+                    <th>Tên Sách</th>
+                    <th>Tác giả</th>
+                    <th class="text-center">Số lượt mượn</th>
+                </tr>
+            </thead>
+            <tbody>
+                @for (int i = 0; i < Model.Count; i++)
+                {
+                    var book = Model[i];
+                    var rank = i + 1;
+                    <tr>
+                        <td class="text-center">
+                            @if (rank == 1)
+                            {
+                                <span class="rank-badge rank-1">🥇</span>
+                            }
+                            else if (rank == 2)
+                            {
+                                <span class="rank-badge rank-2">🥈</span>
+                            }
+                            else if (rank == 3)
+                            {
+                                <span class="rank-badge rank-3">🥉</span>
+                            }
+                            else
+                            {
+                                @rank
+                            }
+                        </td>
+                        <td>@book.Title</td>
+                        <td>@book.Author</td>
+                        <td class="text-center fw-bold">@book.LoanCount</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="card-footer bg-light d-flex justify-content-between align-items-center">
+        <a asp-controller="Librarian" asp-action="Index" class="btn btn-secondary">
+            <i class="bi bi-arrow-left-circle-fill me-1"></i> Quay về Bảng điều khiển
+        </a>
+
+        <form asp-controller="Librarian" asp-action="ExportPopularToExcel" method="post" class="mb-0">
+            <button type="submit" class="btn btn-success">
+                <i class="bi bi-file-earmark-excel-fill me-1"></i> Xuất Excel
+            </button>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $('#popularBooksTable').DataTable({
+                paging: false,
+                lengthChange: false,
+                "order": [[3, "desc"]],
+                language: {
+                    sProcessing: "Đang xử lý...",
+                    sZeroRecords: "Không có dữ liệu thống kê.",
+                    sInfo: "Hiển thị _TOTAL_ sách phổ biến nhất",
+                    sInfoEmpty: "Không có dữ liệu.",
+                    sInfoFiltered: "",
+                    sSearch: "Tìm kiếm:",
+                },
+                "columnDefs": [
+                    { "orderable": false, "targets": 0 }
+                ]
+            });
+        });
+    </script>
+}

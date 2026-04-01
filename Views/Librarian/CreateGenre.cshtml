@@ -1,0 +1,49 @@
+﻿@model QuanLyThuVien.Models.Genre
+@{
+    ViewData["Title"] = "Tạo Thể loại mới";
+}
+
+<style>
+    .form-container {
+        max-width: 600px;
+        margin: 2rem auto;
+        padding: 2.5rem;
+        background-color: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e9ecef;
+    }
+
+    .form-title {
+        font-weight: 700;
+        margin-bottom: 2rem;
+        color: #343a40;
+    }
+</style>
+
+<div class="form-container">
+    <div class="text-center">
+        <h2 class="form-title">@ViewData["Title"]</h2>
+    </div>
+
+    <form asp-action="CreateGenre" method="post">
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+        <div class="mb-4">
+            <label asp-for="Name" class="form-label fw-bold">Tên Thể loại</label>
+            <input asp-for="Name" class="form-control form-control-lg" placeholder="Nhập tên thể loại..." required autocomplete="off" />
+            <span asp-validation-for="Name" class="text-danger"></span>
+        </div>
+
+        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+            <a asp-action="ManageGenres" class="btn btn-outline-secondary">Quay lại</a>
+            <button type="submit" class="btn btn-primary px-4">Tạo mới</button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

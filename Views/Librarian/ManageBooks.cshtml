@@ -1,0 +1,158 @@
+﻿@model List<QuanLyThuVien.Models.Book>
+@{
+    ViewData["Title"] = "Quản lý Sách";
+}
+
+<style>
+    .card-header-custom {
+        background: linear-gradient(to right, #007bff, #0056b3);
+        color: white;
+    }
+
+    /* Tùy chỉnh màu sắc cho các trạng thái */
+    .badge-available {
+        background-color: #198754 !important; /* Xanh lá đậm */
+        color: white;
+    }
+
+    .badge-unavailable {
+        background-color: #dc3545 !important; /* Đỏ */
+        color: white;
+    }
+
+    /* Tùy chỉnh màu cho các nút hành động */
+    .btn-action {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        border: none;
+        color: white !important;
+    }
+
+        .btn-action:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+    .btn-action-edit {
+        background-color: #0dcaf0; /* Xanh ngọc */
+    }
+
+    .btn-action-delete {
+        background-color: #6c757d; /* Xám */
+    }
+</style>
+
+<div class="card shadow-sm">
+    <div class="card-header card-header-custom d-flex justify-content-between align-items-center">
+        <h4 class="mb-0">
+            <i class="bi bi-book-half me-2"></i> @ViewData["Title"]
+        </h4>
+        <a asp-action="CreateBook" class="btn btn-light">
+            <i class="bi bi-plus-circle-fill me-1"></i> Thêm sách mới
+        </a>
+    </div>
+
+    <div class="card-body">
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                @TempData["SuccessMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                @TempData["ErrorMessage"]
+                <button type-button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+
+        <table id="booksTable" class="table table-striped table-hover align-middle" style="width:100%">
+            <thead>
+                <tr>
+                    <th style="width: 8%;">Hình ảnh</th>
+                    <th>Tên Sách</th>
+                    <th>Tác Giả</th>
+                    <th>Thể Loại</th>
+                    <th class="text-center" style="width: 5%;">SL</th>
+                    <th class="text-center" style="width: 10%;">Trạng Thái</th>
+                    <th class="text-center" style="width: 15%;">Hành Động</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Any())
+                {
+                    @foreach (var book in Model)
+                    {
+                        <tr>
+                            <td>
+                                @{
+                                    var imageUrl = !string.IsNullOrEmpty(book.CoverImagePath)
+                                    ? Url.Content(book.CoverImagePath)
+                                    : Url.Content("~/images/no-image.jpg");
+                                }
+                                <img src="@imageUrl" alt="Ảnh sách" style="width: 50px; height: 70px; object-fit: cover; border-radius: 4px;" />
+                            </td>
+                            <td>@book.Title</td>
+                            <td>@book.Author</td>
+                            <td>@book.Genre</td>
+                            <td class="text-center">@book.SoLuong</td>
+                            <td class="text-center">
+                                @if (book.IsAvailable)
+                                {
+                                    <span class="badge badge-available">Có sẵn</span>
+                                }
+                                else
+                                {
+                                    <span class="badge badge-unavailable">Hết sách</span>
+                                }
+                            </td>
+                            <td class="text-center">
+                                <div class="btn-group" role="group">
+                                    <a asp-action="EditBook" asp-route-id="@book.BookId" class="btn btn-sm btn-action btn-action-edit" title="Sửa">
+                                        <i class="bi bi-pencil-fill"></i> Sửa
+                                    </a>
+                                    <a asp-action="DeleteBook" asp-route-id="@book.BookId" class="btn btn-sm btn-action btn-action-delete" title="Xóa">
+                                        <i class="bi bi-trash3-fill"></i> Xóa
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+    <div class="card-footer bg-light">
+        <a asp-controller="Librarian" asp-action="Index" class="btn btn-secondary">
+            <i class="bi bi-arrow-left-circle-fill me-1"></i> Quay về Bảng điều khiển
+        </a>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $('#booksTable').DataTable({
+                language: {
+                    sProcessing: "Đang xử lý...",
+                    sLengthMenu: "Xem _MENU_ sách",
+                    sZeroRecords: "Không tìm thấy sách nào phù hợp",
+                    sInfo: "Đang xem _START_ đến _END_ trong tổng số _TOTAL_ sách",
+                    sInfoEmpty: "Đang xem 0 đến 0 trong tổng số 0 sách",
+                    sInfoFiltered: "(được lọc từ _MAX_ sách)",
+                    sSearch: "Tìm kiếm:",
+                    oPaginate: {
+                        sFirst: "Đầu",
+                        sPrevious: "Trước",
+                        sNext: "Tiếp",
+                        sLast: "Cuối"
+                    }
+                },
+                "columnDefs": [
+                    { "orderable": false, "targets": [0, 6] }
+                ]
+            });
+        });
+    </script>
+}

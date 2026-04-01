@@ -1,0 +1,112 @@
+﻿@model QuanLyThuVien.Models.Book
+
+@{
+    ViewData["Title"] = "Chỉnh sửa Sách";
+}
+
+<h2>@ViewData["Title"]: @Model.Title</h2>
+<hr />
+<div class="row">
+    <div class="col-md-8">
+        <form asp-action="EditBook" method="post" enctype="multipart/form-data">
+            <div asp-validation-summary="All" class="text-danger"></div>
+            <input type="hidden" asp-for="BookId" />
+
+            <div class="form-group mb-3">
+                <label asp-for="Title" class="control-label">Tiêu đề</label>
+                <input asp-for="Title" class="form-control" />
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="Author" class="control-label">Tác giả</label>
+                <input asp-for="Author" class="form-control" />
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="Genre" class="control-label">Thể loại</label>
+                <select asp-for="Genre" id="GenreSelect" class="form-control">
+                    @*
+          Thẻ option này có thể để trống hoặc không,
+          vì placeholder của Select2 sẽ ghi đè lên nó.
+        *@
+
+                    @* Tải các thể loại đã có từ ViewBag *@
+                    @if (ViewBag.Genres != null)
+                    {
+                        foreach (var genre in (SelectList)ViewBag.Genres)
+                        {
+                            // So sánh để chọn đúng thể loại hiện tại của sách
+                            if (genre.Value == Model.Genre)
+                            {
+                                <option value="@genre.Value" selected>@genre.Text</option>
+                            }
+                            else
+                            {
+                                <option value="@genre.Value">@genre.Text</option>
+                            }
+                        }
+                    }
+                </select>
+                <span asp-validation-for="Genre" class="text-danger"></span>
+            </div>
+
+            @* ---------- THÊM SCRIPT KÍCH HOẠT SELECT2 ---------- *@
+            @section Scripts {
+                @{
+                    await Html.RenderPartialAsync("_ValidationScriptsPartial");
+                }
+                <script>
+                    $(document).ready(function() {
+                        $('#GenreSelect').select2({
+                            tags: true,
+                            placeholder: "-- Gõ hoặc chọn thể loại --",
+                            allowClear: true
+                        });
+                    });
+                </script>
+            }
+
+            <div class="form-group mb-3">
+                <label asp-for="PublicationYear" class="control-label">Năm xuất bản</label>
+                <input asp-for="PublicationYear" class="form-control" type="number" />
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="Description" class="control-label">Mô tả</label>
+                <textarea asp-for="Description" class="form-control" rows="4"></textarea>
+            </div>
+            <div class="form-group mb-3">
+                <label asp-for="SoLuong" class="control-label">Số lượng</label>
+                <input asp-for="SoLuong" class="form-control" type="number" min="0" />
+                <span asp-validation-for="SoLuong" class="text-danger"></span>
+            </div>
+
+
+         
+
+            <div class="form-group mb-3">
+                <label for="images" class="control-label">Ảnh minh họa</label>
+                <input type="file" name="imageFile" class="form-control" />
+                <small class="text-muted">Chọn nhiều ảnh nếu muốn thay ảnh minh họa.</small>
+            </div>
+
+            @if (Model.BookImages != null && Model.BookImages.Any())
+            {
+                <div class="mb-3">
+                    <label>Ảnh hiện tại:</label>
+                    <div class="d-flex flex-wrap gap-2">
+                        @foreach (var img in Model.BookImages)
+                        {
+                            <img src="@img.ImagePath" width="100" height="140" style="object-fit: cover; border: 1px solid #ccc;" />
+                        }
+                    </div>
+                </div>
+            }
+
+            <div class="form-group">
+                <input type="submit" value="Lưu thay đổi" class="btn btn-primary" />
+                <a asp-action="ManageBooks" class="btn btn-secondary">Hủy</a>
+            </div>
+        </form>
+    </div>
+</div>

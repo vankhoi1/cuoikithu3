@@ -1,0 +1,87 @@
+﻿@model List<QuanLyThuVien.Models.BookReservation>
+@using QuanLyThuVien.Models
+
+<h2>Quản lý đặt trước</h2>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+}
+@if (TempData["WarningMessage"] != null)
+{
+    <div class="alert alert-warning">@TempData["WarningMessage"]</div>
+}
+
+<h3>Tạo đặt trước mới</h3>
+@{
+    var newReservation = new BookReservation(); // Create a new BookReservation for the form
+}
+<form asp-action="CreateReservation" method="post">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <div class="form-group">
+        <label asp-for="@newReservation.BookId" class="control-label">Sách</label>
+        <select asp-for="@newReservation.BookId" asp-items="ViewBag.Books" class="form-control" required>
+            <option value="">Chọn sách</option>
+        </select>
+        <span class="text-danger" asp-validation-for="@newReservation.BookId"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="@newReservation.Username" class="control-label">Người dùng</label>
+        <select asp-for="@newReservation.Username" asp-items="ViewBag.Users" class="form-control" required>
+            <option value="">Chọn người dùng</option>
+        </select>
+        <span class="text-danger" asp-validation-for="@newReservation.Username"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="@newReservation.ReservationDate" class="control-label">Ngày đặt trước</label>
+        <input asp-for="@newReservation.ReservationDate" class="form-control" type="date" value="@DateTime.Now.ToString("yyyy-MM-dd")" required />
+        <span class="text-danger" asp-validation-for="@newReservation.ReservationDate"></span>
+    </div>
+
+    <div class="form-group">
+        <input type="submit" value="Tạo đặt trước" class="btn btn-primary" />
+    </div>
+</form>
+
+<h3>Danh sách đặt trước</h3>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Sách</th>
+            <th>Người dùng</th>
+            <th>Ngày đặt trước</th>
+            <th>Hành động</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var reservation in Model)
+        {
+            <tr>
+                <td>@reservation.Book?.Title</td>
+                <td>@reservation.Username</td>
+                <td>@reservation.ReservationDate.ToString("dd/MM/yyyy")</td>
+                <td>
+                    <a asp-action="EditReservation" asp-route-id="@reservation.ReservationId" class="btn btn-warning">Sửa</a>
+                    <a asp-action="DeleteReservation" asp-route-id="@reservation.ReservationId" class="btn btn-danger">Xóa</a>
+                    <form asp-action="ApproveReservation" method="post" style="display:inline;">
+                        <input type="hidden" name="reservationId" value="@reservation.ReservationId" />
+                        <input type="submit" value="Phê duyệt" class="btn btn-success" />
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

@@ -1,0 +1,269 @@
+﻿@using Newtonsoft.Json; 
+@{
+    ViewData["Title"] = "Trang Quản lý - Thủ Thư";
+    
+    // Lấy số đếm ban đầu từ Controller
+    int loanCount = (int)(ViewData["PendingLoanCount"] ?? 0);
+    int reservationCount = (int)(ViewData["PendingReservationCount"] ?? 0);
+
+    // THÊM MỚI: Chuyển danh sách độc giả C# sang mảng JavaScript
+    var readerListJson = JsonConvert.SerializeObject(ViewBag.Readers);
+}
+
+<style>
+    .dashboard-card {
+        background: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        padding: 1.5rem;
+        text-align: center;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        text-decoration: none;
+        color: #333;
+        display: block;
+        height: 100%;
+        position: relative; /* Quan trọng để định vị badge */
+    }
+    .dashboard-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        color: #0056b3;
+    }
+    .dashboard-card .icon-wrapper {
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
+    }
+    .dashboard-card h5 {
+        font-weight: 600;
+        font-size: 1.1rem;
+    }
+    .dashboard-card .btn {
+        margin-top: 1rem;
+        font-weight: 600;
+    }
+    
+    /* CSS cho chấm đỏ thông báo */
+    .notification-badge {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        width: 20px;
+        height: 20px;
+        background-color: #dc3545;
+        color: white;
+        border-radius: 50%;
+        font-size: 0.75rem;
+        font-weight: bold;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid white;
+        animation: pulse-sm 1.5s infinite;
+    }
+
+
+    @@keyframes pulse-sm {
+        0% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7); }
+        70% { box-shadow: 0 0 0 8px rgba(220, 53, 69, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); }
+    }
+</style>
+
+<div class="container-fluid py-4">
+    <h3 class="mb-4 fw-bold"><i class="bi bi-person-gear"></i> Bảng Điều Khiển Thủ Thư</h3>
+
+    <div class="row g-4">
+        <div class="col-lg-3 col-md-4 col-6">
+            <a asp-action="ManageBooks" asp-controller="Librarian" class="dashboard-card">
+                <div class="icon-wrapper text-primary"><i class="bi bi-book-half"></i></div>
+                <h5>Quản Lý Sách</h5>
+                <div class="btn btn-sm btn-primary">Đi tới</div>
+            </a>
+        </div>
+
+        <div class="col-lg-3 col-md-4 col-6">
+            <a asp-action="ManageGenres" asp-controller="Librarian" class="dashboard-card">
+                <div class="icon-wrapper text-success"><i class="bi bi-tags-fill"></i></div>
+                <h5>Quản Lý Thể Loại</h5>
+                <div class="btn btn-sm btn-success">Đi tới</div>
+            </a>
+        </div>
+
+        <div class="col-lg-3 col-md-4 col-6">
+            <a asp-action="ManageReaders" asp-controller="Librarian" class="dashboard-card">
+                <div class="icon-wrapper" style="color: #6f42c1;"><i class="bi bi-people-fill"></i></div>
+                <h5>Quản Lý Độc Giả</h5>
+                <div class="btn btn-sm btn-primary">Đi tới</div>
+            </a>
+        </div>
+
+        <div class="col-lg-3 col-md-4 col-6">
+            <a asp-action="LoanDashboard" asp-controller="Librarian" class="dashboard-card">
+                <span class="notification-badge" id="dashboard-loan-badge" 
+                      style="@(loanCount > 0 ? "display: flex;" : "display: none;")">
+                      @loanCount
+                </span>
+                <div class="icon-wrapper text-success"><i class="bi bi-mailbox2"></i></div>
+                <h5>Quản Lý Mượn / Trả</h5>
+                <div class="btn btn-sm btn-success">Đi tới</div>
+            </a>
+        </div>
+
+        <div class="col-lg-3 col-md-4 col-6">
+            <a asp-action="ManageReservations" asp-controller="Librarian" class="dashboard-card">
+                <span class="notification-badge" id="dashboard-reservation-badge" 
+                      style="@(reservationCount > 0 ? "display: flex;" : "display: none;")">
+                      @reservationCount
+                </span>
+                <div class="icon-wrapper text-info"><i class="bi bi-clipboard2-check-fill"></i></div>
+                <h5>Quản Lý Đặt Trước</h5>
+                <div class="btn btn-sm btn-success">Đi tới</div>
+            </a>
+        </div>
+
+        <div class="col-lg-3 col-md-4 col-6">
+            <a asp-action="OverdueStatistics" asp-controller="Librarian" class="dashboard-card">
+                <div class="icon-wrapper text-danger"><i class="bi bi-graph-down-arrow"></i></div>
+                <h5>Thống Kê Quá Hạn</h5>
+                <div class="btn btn-sm btn-success">Đi tới</div>
+            </a>
+        </div>
+
+        <div class="col-lg-3 col-md-4 col-6">
+            <a asp-action="PopularBooks" asp-controller="Librarian" class="dashboard-card">
+                <div class="icon-wrapper text-warning"><i class="bi bi-fire"></i></div>
+                <h5>Sách Phổ Biến</h5>
+                <div class="btn btn-sm btn-primary">Đi tới</div>
+            </a>
+        </div>
+        
+        <div class="col-lg-3 col-md-4 col-6">
+            <a asp-action="ChatDashboard" asp-controller="Chat" class="dashboard-card" id="chat-card-link">
+                <span class="notification-badge" id="dashboard-chat-badge" style="display: none;">!</span>
+                <div class="icon-wrapper text-info-emphasis"><i class="bi bi-chat-right-dots-fill"></i></div>
+                <h5>Quản Lý Chat</h5>
+                <div class="btn btn-sm btn-success">Đi tới</div>
+            </a>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        // Lấy các chấm đỏ (badge)
+        const loanBadge = document.getElementById('dashboard-loan-badge');
+        const reservationBadge = document.getElementById('dashboard-reservation-badge');
+        const chatBadge = document.getElementById('dashboard-chat-badge');
+        const chatCardLink = document.getElementById('chat-card-link');
+        
+        // *** Lấy danh sách độc giả từ Controller ***
+        const allReaders = @Html.Raw(readerListJson);
+        const storageKey = 'librarian_chat_read_timestamps'; // Khóa localStorage
+
+        // --- 1. Helper Functions cho localStorage ---
+        function getReadTimestamps() {
+            return JSON.parse(localStorage.getItem(storageKey)) || {};
+        }
+
+        // --- 2. Hàm kiểm tra tin nhắn CHƯA ĐỌC khi tải trang ---
+        async function checkUnreadOnLoad() {
+            const timestamps = getReadTimestamps();
+            let hasUnread = false;
+
+            // Tạo một mảng các "promise" để fetch song song
+            const checkPromises = allReaders.map(username => (async () => {
+                if (hasUnread) return; // Nếu đã tìm thấy 1 tin chưa đọc, không cần check nữa
+
+                const lastRead = timestamps[username] ? new Date(timestamps[username]) : new Date(0);
+                
+                try {
+                    // Tải tin nhắn của user này
+                    const res = await fetch(`/Chat/GetMessages?reader=${encodeURIComponent(username)}`);
+                    if (!res.ok) return;
+                    
+                    const data = await res.json();
+                    
+                    if (data.length > 0) {
+                        const lastMessage = data[data.length - 1];
+                        const lastMessageTime = new Date(lastMessage.sentAt);
+
+                        // Nếu tin cuối là của độc giả VÀ mới hơn lần đọc cuối
+                        if (lastMessage.fromUser === username && lastMessageTime > lastRead) {
+                            hasUnread = true;
+                        }
+                    }
+                } catch (e) {
+                    console.error("Lỗi fetch tin nhắn của " + username, e);
+                }
+            })());
+
+            // Chờ tất cả các hàm fetch chạy xong
+            await Promise.all(checkPromises);
+
+            // Sau khi check xong, cập nhật UI
+            if (hasUnread && chatBadge) {
+                chatBadge.style.display = 'flex';
+                chatBadge.textContent = '!';
+            }
+        }
+
+        // --- 3. Lắng nghe tin nhắn MỚI (Real-time) ---
+        const chatConnection = new signalR.HubConnectionBuilder()
+            .withUrl("/chathub?user=thu-thu")
+            .withAutomaticReconnect()
+            .build();
+
+        chatConnection.on("ReceiveMessage", (fromUser, message) => {
+            if (fromUser !== 'thu-thu' && chatBadge) {
+                chatBadge.style.display = 'flex'; 
+                chatBadge.textContent = '!';
+            }
+        });
+
+        // Khi bấm vào card chat, ẩn chấm đỏ
+        if (chatCardLink && chatBadge) {
+            chatCardLink.addEventListener('click', () => {
+                chatBadge.style.display = 'none';
+            });
+        }
+
+        // Bắt đầu kết nối chat
+        chatConnection.start().catch(err => console.error("Lỗi SignalR (Chat):", err));
+        
+        // --- 4. Lấy thông báo Mượn/Đặt (Fetch API) (Không đổi) ---
+        async function fetchNotificationCounts() {
+            try {
+                const response = await fetch('/api/librarian/notification-counts');
+                if (!response.ok) return;
+                const data = await response.json();
+                if (loanBadge) {
+                    if (data.loanManagement > 0) {
+                        loanBadge.textContent = data.loanManagement > 9 ? '9+' : data.loanManagement;
+                        loanBadge.style.display = 'flex';
+                    } else {
+                        loanBadge.style.display = 'none';
+                    }
+                }
+                if (reservationBadge) {
+                    if (data.reservationManagement > 0) {
+                        reservationBadge.textContent = data.reservationManagement > 9 ? '9+' : data.reservationManagement;
+                        reservationBadge.style.display = 'flex';
+                    } else {
+                        reservationBadge.style.display = 'none';
+                    }
+                }
+            } catch (error) {
+                console.error("Lỗi fetch thông báo (Loan/Reservation):", error);
+            }
+        }
+
+        // --- 5. CHẠY CÁC HÀM ---
+        fetchNotificationCounts(); // Chạy check Mượn/Trả
+        checkUnreadOnLoad(); // *** CHẠY HÀM MỚI ĐỂ CHECK CHAT CŨ ***
+        
+        setInterval(fetchNotificationCounts, 30000); 
+    });
+</script>
+}

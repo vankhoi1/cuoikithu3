@@ -1,0 +1,86 @@
+﻿@model QuanLyThuVien.Models.Book
+
+@{
+    ViewData["Title"] = "Thêm Sách mới";
+}
+
+<h2>@ViewData["Title"]</h2>
+<hr />
+<div class="row">
+    <div class="col-md-8">
+        <form asp-action="CreateBook" method="post" enctype="multipart/form-data">
+            @* <-- THÊM enctype *@
+            <div asp-validation-summary="All" class="text-danger"></div>
+
+            <div class="form-group mb-3">
+                <label asp-for="Title" class="control-label">Tiêu đề</label>
+                <input asp-for="Title" class="form-control" />
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="Author" class="control-label">Tác giả</label>
+                <input asp-for="Author" class="form-control" />
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="Genre" class="control-label">Thể loại</label>
+                <select asp-for="Genre" id="GenreSelect" class="form-control">
+                    <option value="">-- Gõ hoặc chọn thể loại --</option>
+
+                    @* Tải các thể loại đã có từ ViewBag *@
+                    @if (ViewBag.Genres != null)
+                    {
+                        foreach (var genre in (SelectList)ViewBag.Genres)
+                        {
+                            <option value="@genre.Value">@genre.Text</option>
+                        }
+                    }
+                </select>
+            </div>
+
+            @* ---------- THÊM SCRIPT KÍCH HOẠT SELECT2 ---------- *@
+            @section Scripts {
+                @{
+                    await Html.RenderPartialAsync("_ValidationScriptsPartial");
+                }
+                <script>
+                    $(document).ready(function() {
+                        $('#GenreSelect').select2({
+                            tags: true, // Đây là tùy chọn quan trọng cho phép tạo tag/thể loại mới
+                            placeholder: "-- Gõ hoặc chọn thể loại --",
+                            allowClear: true
+                        });
+                    });
+                </script>
+            }
+
+            <div class="form-group mb-3">
+                <label asp-for="PublicationYear" class="control-label">Năm xuất bản</label>
+                <input asp-for="PublicationYear" class="form-control" type="number" />
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="Description" class="control-label">Mô tả</label>
+                <textarea asp-for="Description" class="form-control" rows="4"></textarea>
+            </div>
+            <div class="form-group mb-3">
+                <label asp-for="SoLuong" class="control-label">Số lượng</label>
+                <input asp-for="SoLuong" class="form-control" type="number" min="1" />
+                <span asp-validation-for="SoLuong" class="text-danger"></span>
+            </div>
+
+         
+
+            @* ---------- THÊM INPUT CHỌN ẢNH ---------- *@
+            <div class="form-group mb-3">
+                <label>Ảnh minh họa</label>
+                <input type="file" name="images" multiple class="form-control" />
+            </div>
+
+            <div class="form-group">
+                <input type="submit" value="Thêm Sách" class="btn btn-primary" />
+                <a asp-action="ManageBooks" class="btn btn-secondary">Quay lại danh sách</a>
+            </div>
+        </form>
+    </div>
+</div>

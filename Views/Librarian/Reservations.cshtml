@@ -1,0 +1,56 @@
+﻿@model List<QuanLyThuVien.Models.BookReservation>
+@{
+    ViewData["Title"] = "Quản Lý Yêu Cầu Đặt Trước";
+}
+
+<div class="container mt-4">
+    <h2>Quản Lý Yêu Cầu Đặt Trước</h2>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+    }
+
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Sách</th>
+                <th>Người dùng</th>
+                <th>Ngày đặt</th>
+                <th>Trạng thái</th>
+                <th>Hành động</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var reservation in Model)
+            {
+                <tr>
+                    <td>@reservation.Book.Title</td>
+                    <td>@reservation.Username</td>
+                    <td>@reservation.ReservationDate.ToString("dd/MM/yyyy HH:mm")</td>
+                    <td>@reservation.Status</td>
+                    <td>
+                        <form asp-action="ApproveReservation" method="post" style="display:inline;">
+                            <input type="hidden" name="reservationId" value="@reservation.ReservationId" />
+                            <button type="submit" class="btn btn-success btn-sm" onclick="return confirm('Duyệt yêu cầu này?');">Duyệt</button>
+                        </form>
+                        <form asp-action="RejectReservation" method="post" style="display:inline;">
+                            <input type="hidden" name="reservationId" value="@reservation.ReservationId" />
+                            <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Từ chối yêu cầu này?');">Từ chối</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
