@@ -21,7 +21,11 @@ namespace QuanLyThuVien.Controllers
             return View("~/Views/Reader/Chat.cshtml");
         }
 
+ HEAD
         // Trang dashboard chat của thủ thư
+
+        // dashboard chat của thủ thư
+ f8edfa8a1f148a98b880208a8d22ff5f033850f6
         public IActionResult ChatDashboard()
         {
             var readers = _context.ChatMessages
@@ -33,7 +37,11 @@ namespace QuanLyThuVien.Controllers
             return View("~/Views/Librarian/ChatDashboard.cshtml");
         }
 
+ HEAD
         // Lấy tin nhắn giữa 2 người
+
+        // Lấy tin nhắn 2 người
+ f8edfa8a1f148a98b880208a8d22ff5f033850f6
         [HttpGet]
         public IActionResult GetMessages(string reader)
         {
@@ -70,7 +78,11 @@ namespace QuanLyThuVien.Controllers
         {
             var fromUser = User.Identity?.Name ?? "khach";
             if (string.IsNullOrEmpty(toUser) || string.IsNullOrEmpty(message))
+ HEAD
                 return BadRequest("Thiếu thông tin.");
+
+                return BadRequest("Thiếu thông tin");
+ f8edfa8a1f148a98b880208a8d22ff5f033850f6
 
             var chatMessage = new ChatMessage
             {

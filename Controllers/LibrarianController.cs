@@ -15,7 +15,11 @@ using ClosedXML.Excel;
 using QuanLyThuVien;
 namespace QuanLyThuVien.Controllers
 {
+ HEAD
     [Authorize(Roles = "ThuThu")]
+
+    [Authorize(Roles = "ThuThu")] // Phân quyền Thủ Thư
+ f8edfa8a1f148a98b880208a8d22ff5f033850f6
     public class LibrarianController : Controller
     {
         private readonly LibraryDbContext _context;
@@ -30,6 +34,7 @@ namespace QuanLyThuVien.Controllers
             _onnxImageService = onnxImageService;
         }
 
+ HEAD
         public async Task<IActionResult> Index()
         {
             // Lấy số yêu cầu mượn sách đang chờ
@@ -64,6 +69,15 @@ namespace QuanLyThuVien.Controllers
 
 
 
+
+        public IActionResult Index()
+        {
+            return View();
+        }
+
+   
+   
+ f8edfa8a1f148a98b880208a8d22ff5f033850f6
         #region Book Management (CRUD)
         public async Task<IActionResult> ManageBooks()
         {
