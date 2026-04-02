@@ -77,6 +77,9 @@ namespace QuanLyThuVien.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
+                    b.Property<string>("PdfPath")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int>("PublicationYear")
                         .HasColumnType("int");
 
@@ -169,6 +172,34 @@ namespace QuanLyThuVien.Migrations
                     b.HasIndex("Username");
 
                     b.ToTable("BookReservations");
+                });
+
+            modelBuilder.Entity("QuanLyThuVien.Models.ChatMessage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("FromUser")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("SentAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ToUser")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ChatMessages");
                 });
 
             modelBuilder.Entity("QuanLyThuVien.Models.DocGia", b =>

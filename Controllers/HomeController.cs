@@ -1,16 +1,8 @@
- HEAD
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using QuanLyThuVien.Data;
 using System.Linq;
 using System.Threading.Tasks;
-
-﻿using Microsoft.AspNetCore.Mvc; // MVC
-using QuanLyThuVien.Data; //QLTV
-using Microsoft.EntityFrameworkCore;//Code
-using System.Threading.Tasks;
-using System.Linq;
- f8edfa8a1f148a98b880208a8d22ff5f033850f6
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using QuanLyThuVien.Models; // Để sử dụng BookListViewModel
@@ -30,7 +22,6 @@ namespace QuanLyThuVien.Controllers
             _onnxImageService = onnxImageService;
         }
 
- HEAD
         // Hãy dán đè code này lên trên phương thức Index() cũ của bạn
 
         // Trong file: HomeController.cs
@@ -43,16 +34,10 @@ namespace QuanLyThuVien.Controllers
         public async Task<IActionResult> Index(string searchString, string genre, string filter, List<int> resultIds, bool imageSearch = false)
         {
             // Tải danh sách thể loại cho dropdown (bắt buộc)
-
-        public async Task<IActionResult> Index(string searchString, string genre, string filter, List<int> resultIds)
-        {
-            // Tải danh sách thể loại cho dropdown 
- f8edfa8a1f148a98b880208a8d22ff5f033850f6
             var allGenreStrings = await _context.Books.Where(b => !string.IsNullOrEmpty(b.Genre)).Select(b => b.Genre).ToListAsync();
             var individualGenres = allGenreStrings.SelectMany(g => g.Split(',')).Select(g => g.Trim()).Where(g => !string.IsNullOrEmpty(g)).Distinct().OrderBy(g => g);
             ViewBag.Genres = individualGenres.ToList();
 
- HEAD
             // 1. Lấy thông tin người dùng VÀ sách họ đang mượn/chờ LÊN ĐẦU
             var borrowedIds = new HashSet<int>();
             var reservedIds = new HashSet<int>();
@@ -76,16 +61,6 @@ namespace QuanLyThuVien.Controllers
                 booksQuery = booksQuery.Where(b => resultIds.Contains(b.BookId));
             }
             else // Nếu là TÌM BẰNG CHỮ (hoặc tải trang bình thường)
-
-            var booksQuery = _context.Books.Include(b => b.BookImages).AsQueryable();
-
-            // THAY ĐỔI QUAN TRỌNG: Ưu tiên xử lý kết quả từ tìm kiếm ảnh
-            if (resultIds != null && resultIds.Any())
-            {
-                booksQuery = booksQuery.Where(b => resultIds.Contains(b.BookId));
-            }
-            else // Nếu không phải kết quả từ tìm ảnh, thì xử lý tìm kiếm bằng chữ như cũ
- f8edfa8a1f148a98b880208a8d22ff5f033850f6
             {
                 if (!string.IsNullOrEmpty(searchString))
                 {
@@ -100,7 +75,6 @@ namespace QuanLyThuVien.Controllers
                 {
                     if (filter == "available") booksQuery = booksQuery.Where(b => b.SoLuong > 0);
                     else if (filter == "borrowed") booksQuery = booksQuery.Where(b => b.SoLuong <= 0);
- HEAD
 
                     // Sửa lại logic "mybooks" để bao gồm cả sách đang chờ duyệt
                     else if (filter == "mybooks")
@@ -116,35 +90,14 @@ namespace QuanLyThuVien.Controllers
                             booksQuery = booksQuery.Where(b => false);
                         }
                     }
-
- f8edfa8a1f148a98b880208a8d22ff5f033850f6
                 }
             }
 
             var bookList = await booksQuery.ToListAsync();
 
- HEAD
             var viewModel = new BookListViewModel
             {
                 Books = bookList, // 'bookList' bây giờ sẽ rỗng nếu không tìm thấy
-
-            // Code xử lý ViewModel giữ nguyên như cũ
-            // Code xử lý ViewModel giữ nguyên như cũ
-            var borrowedIds = new HashSet<int>();
-            var reservedIds = new HashSet<int>();
-            var pendingLoanIds = new HashSet<int>();
-            if (User.Identity.IsAuthenticated)
-            {
-                var username = User.Identity.Name;
-                borrowedIds = (await _context.BookLoans.Where(l => l.Username == username && l.Status == "Approved" && l.ReturnDate == null).Select(l => l.BookId).ToListAsync()).ToHashSet();
-                reservedIds = (await _context.BookReservations.Where(r => r.Username == username && r.Status == "Pending").Select(r => r.BookId).ToListAsync()).ToHashSet();
-                pendingLoanIds = (await _context.BookLoans.Where(l => l.Username == username && l.Status == "Pending").Select(l => l.BookId).ToListAsync()).ToHashSet();
-            }
-
-            var viewModel = new BookListViewModel
-            {
-                Books = bookList,
- f8edfa8a1f148a98b880208a8d22ff5f033850f6
                 BorrowedBookIds = borrowedIds,
                 ReservedBookIds = reservedIds,
                 PendingLoanBookIds = pendingLoanIds
@@ -156,7 +109,6 @@ namespace QuanLyThuVien.Controllers
 
             return View(viewModel);
         }
- HEAD
 
 // ... (Các phương thức khác trong HomeController.cs vẫn giữ nguyên)
 
@@ -164,8 +116,6 @@ namespace QuanLyThuVien.Controllers
 // ... (Các phương thức khác như GetBooksApi, SearchByImage... giữ nguyên)
 
         // ... (Các phương thức khác trong HomeController.cs vẫn giữ nguyên)
-
- f8edfa8a1f148a98b880208a8d22ff5f033850f6
         // [MỚI] Action API để xử lý tìm kiếm bằng AJAX
         [HttpGet]
         [Route("api/home/books")] // Endpoint API mới
@@ -254,11 +204,7 @@ namespace QuanLyThuVien.Controllers
 
             if (queryVector == null)
             {
- HEAD
                 TempData["ErrorMessage"] = "Không thể phân tích hình ảnh này.";
-
-                TempData["ErrorMessage"] = "Không phân tích được hình ảnh này";
-f8edfa8a1f148a98b880208a8d22ff5f033850f6
                 return RedirectToAction("Index");
             }
 
@@ -278,7 +224,6 @@ f8edfa8a1f148a98b880208a8d22ff5f033850f6
                 .ToList();
 
             TempData["SuccessMessage"] = $"Tìm thấy {matchingBookIds.Count} kết quả giống với hình ảnh của bạn.";
- HEAD
             // === THÊM 5 DÒNG NÀY VÀO ===
             if (matchingBookIds.Any())
             {
@@ -292,11 +237,6 @@ f8edfa8a1f148a98b880208a8d22ff5f033850f6
             // THAY ĐỔI QUAN TRỌNG: Chuyển hướng về action Index với danh sách ID tìm được
             // ... (code tìm kiếm) ...
             return RedirectToAction("Index", new { resultIds = matchingBookIds, imageSearch = true });
-
-
-            // THAY ĐỔI QUAN TRỌNG: Chuyển hướng về action Index với danh sách ID tìm được
-            return RedirectToAction("Index", new { resultIds = matchingBookIds });
- f8edfa8a1f148a98b880208a8d22ff5f033850f6
         }
     }
     }

@@ -9,7 +9,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
-// Dịch vụ xử lý ảnh và trích xuất vector đặc trưng bằng mô hình ONNX
+
 public class OnnxImageService
 {
     private readonly InferenceSession _session;

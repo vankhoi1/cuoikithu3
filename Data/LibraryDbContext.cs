@@ -18,6 +18,7 @@ namespace QuanLyThuVien.Data
         public DbSet<Genre> Genres { get; set; }
         public DbSet<DocGia> DocGia { get; set; }
         public DbSet<Notification> Notifications { get; set; }
+        public DbSet<ChatMessage> ChatMessages { get; set; }
         public DbSet<LibrarianActivity> LibrarianActivities { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

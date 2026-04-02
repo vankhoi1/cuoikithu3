@@ -2,18 +2,22 @@
 using Microsoft.EntityFrameworkCore;
 using QuanLyThuVien.Data;
 using QuanLyThuVien.Services;
+using QuanLyThuVien.Hubs; // ✅ Thêm để dùng ChatHub
+using Microsoft.Extensions.FileProviders;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// ✅ Đăng ký các service
 builder.Services.AddSingleton<OnnxImageService>();
 
-// Kết nối DB
+// Kết nối Database
 builder.Services.AddDbContext<LibraryDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Thêm IHttpContextAccessor
 builder.Services.AddHttpContextAccessor();
 
-// Xác thực cookie
+// ✅ Xác thực bằng Cookie
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
@@ -21,21 +25,28 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.AccessDeniedPath = "/Account/Login";
     });
 
-// Phân quyền
+// ✅ Phân quyền
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
 });
 
-// ✅ Cấu hình EmailSettings và GmailEmailService
+// ✅ Cấu hình gửi Email qua Gmail
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 builder.Services.AddScoped<GmailEmailService>();
+
+// ✅ Thêm background service kiểm tra quá hạn
 builder.Services.AddHostedService<OverdueCheckService>();
-// Thêm MVC
+
+// ✅ Thêm SignalR cho chat realtime
+builder.Services.AddSignalR();
+
+// ✅ Thêm MVC
 builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
-// --- PHẦN THÊM VÀO ĐỂ TẠO TÀI KHOẢN ADMIN ---
+
+// --- PHẦN KHỞI TẠO TÀI KHOẢN ADMIN ---
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -43,7 +54,6 @@ using (var scope = app.Services.CreateScope())
     {
         var context = services.GetRequiredService<LibraryDbContext>();
         context.Database.EnsureCreated();
-        // Gọi phương thức để tạo tài khoản admin
         DbInitializer.SeedAdminUser(context);
     }
     catch (Exception ex)
@@ -52,8 +62,9 @@ using (var scope = app.Services.CreateScope())
         logger.LogError(ex, "An error occurred while seeding the database.");
     }
 }
-// --- KẾT THÚC PHẦN THÊM VÀO ---
-// Pipeline
+// --- KẾT THÚC PHẦN ADMIN ---
+
+// ✅ Cấu hình pipeline
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
@@ -65,11 +76,12 @@ else
 }
 
 app.UseHttpsRedirection();
-// Cấu hình static files cho cả /images và /BookImages
-app.UseStaticFiles(); // Mặc định cho /wwwroot
+
+// ✅ Cấu hình static files cho ảnh
+app.UseStaticFiles(); // Mặc định cho wwwroot
 app.UseStaticFiles(new StaticFileOptions
 {
-    FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(
+    FileProvider = new PhysicalFileProvider(
         Path.Combine(builder.Environment.ContentRootPath, "wwwroot/BookImages")),
     RequestPath = "/BookImages"
 });
@@ -79,8 +91,12 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
+// ✅ Map route MVC
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
+
+// ✅ Map SignalR Hub (chat realtime)
+app.MapHub<ChatHub>("/chathub");
 
 app.Run();

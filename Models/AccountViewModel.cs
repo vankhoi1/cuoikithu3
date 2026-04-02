@@ -1,4 +1,4 @@
-﻿namespace QuanLyThuVien.Models//Viewmodel
+﻿namespace QuanLyThuVien.Models
 {
     public class AccountViewModel
     {

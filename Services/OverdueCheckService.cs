@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using QuanLyThuVien.Models;
-// Dịch vụ nền kiểm tra các phiếu mượn sách đã quá hạn và gửi email thông báo
+
 namespace QuanLyThuVien.Services
 {
     public class OverdueCheckService : IHostedService, IDisposable

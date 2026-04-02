@@ -4,7 +4,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Threading.Tasks;
-// Dịch vụ gửi email qua Gmail SMTP
+
 namespace QuanLyThuVien.Services
 {
     public class GmailEmailService

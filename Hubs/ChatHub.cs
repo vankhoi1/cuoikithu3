@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using System.Collections.Concurrent;
 using System.Linq;
 using System;
-//Chat Hub 
+
 namespace QuanLyThuVien.Hubs
 {
     public class ChatHub : Hub
